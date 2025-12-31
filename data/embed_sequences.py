@@ -1,0 +1,90 @@
+import pandas as pd
+import numpy as np
+import torch
+from transformers import T5Tokenizer, T5EncoderModel
+from pathlib import Path
+
+
+# setup variables
+# "Rostlab/prot_t5_xl_half_uniref50-enc" (~1.2B params)
+# "Rostlab/prot_t5_base_mt_uniref50" (~220M params)
+MODEL_NAME: str = "Rostlab/prot_t5_xl_half_uniref50-enc"
+NUM_FOLDS: int = 3
+
+DEVICE: str = (
+    "mps"
+    if torch.backends.mps.is_available()
+    else "cuda"
+    if torch.cuda.is_available()
+    else "cpu"
+)
+print(f"Using device: {DEVICE}")
+
+cwd = Path.cwd()
+BASE_DIR = cwd.parent
+
+DATA_PATH: Path = BASE_DIR / "data" / "aufgabe3"
+DATA_PATH_FOLDS: Path = DATA_PATH / "3-fold"
+
+print(f"Project base directory set to: {BASE_DIR}")
+print(f"Data path set to: {DATA_PATH}")
+print(f"Using model: {MODEL_NAME}")
+
+
+def embed_sequence(sequence: Series, tokenizer: T5Tokenizer, encoder: T5EncoderModel, device: str = DEVICE) -> torch.Tensor:
+
+    # spaces between needed for tokenizer
+    seq_spaced = " ".join(list(sequence))
+
+    # tokenize
+    tokenized = tokenizer(
+        seq_spaced, return_tensors="pt", padding=True, truncation=True, max_length=512
+    )
+    input_ids = tokenized["input_ids"].to(device)
+    attention_mask = tokenized["attention_mask"].to(device)
+
+    # Get embeddings
+    with torch.no_grad():
+        output = encoder(input_ids=input_ids, attention_mask=attention_mask)
+        embeddings = output.last_hidden_state  # (1, seq_len, hidden_dim)
+
+    # Remove batch dimension
+    embeddings = embeddings.squeeze(0)  # (seq_len, hidden_dim)
+
+    # need to exclude the end of sequence token
+    seq_len = len(sequence)
+    embeddings = embeddings[:seq_len]  # (seq_len, hidden_dim)
+
+    return embeddings.float()  # (seq_len, hidden_dim)
+
+
+# load the transformer and the tokenizer
+tokenizer: T5Tokenizer = T5Tokenizer.from_pretrained(MODEL_NAME, do_lower_case=False)
+encoder: T5EncoderModel = T5EncoderModel.from_pretrained(MODEL_NAME, torch_dtype=torch.float16)
+encoder.to(DEVICE)
+
+# Generate and save embeddings for each fold's train/val sets
+for fold_idx in range(NUM_FOLDS):
+    # load data for according fold
+    fold_train = pd.read_csv(DATA_PATH_FOLDS / f"fold_{fold_idx + 1}_train.csv")
+    fold_val = pd.read_csv(DATA_PATH_FOLDS / f"fold_{fold_idx + 1}_val.csv")
+
+    # go through train and val data
+    for df, split in [(fold_train, "train"), (fold_val, "val")]:
+        embeddings_dict = {}
+        print(f"Embedding sequences for fold {fold_idx + 1} {split} set:")
+
+        for idx, row in df.iterrows():
+            uniprot_id = row["uniprot_id"]
+            sequence = row["sequence"]
+            embedding = embed_sequence(sequence, tokenizer, encoder)  # embed per residue
+            embeddings_dict[uniprot_id] = embedding.cpu().numpy()  # save to dict as numpy array for later use for npz saving
+
+            if (len(embeddings_dict)) % 100 == 0:
+                print(f"  Processed {len(embeddings_dict)}/{len(df)} sequences")
+
+        # save embeddings to npz file
+        save_path = DATA_PATH_FOLDS / f"fold_{fold_idx + 1}_{split}_embeddings.npz"
+        np.savez(save_path, **embeddings_dict) # each key value pair passed seperately, key as array identifier, value as contents in npz
+        print(f"  Saved {len(embeddings_dict)} embeddings to {save_path.name}")
+
