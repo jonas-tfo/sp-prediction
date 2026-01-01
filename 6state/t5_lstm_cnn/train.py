@@ -95,10 +95,10 @@ def train():
                     attention_mask = batch['attention_mask'].to(Config.DEVICE)
                     token_labels = batch['labels'].to(Config.DEVICE)
 
-                    optimizer.zero_grad()
-                    loss = model(embeddings, attention_mask, token_labels)
+                    optimizer.zero_grad() # clear the gradients from previous step
+                    loss = model(embeddings, attention_mask, token_labels) # call forward func, crf gives loss directly during training
 
-                    scaler.scale(loss).backward()
+                    scaler.scale(loss).backward() # backpropagation, scales gradients for fp16
                     scaler.unscale_(optimizer)
                     torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
                     scaler.step(optimizer)
@@ -122,7 +122,7 @@ def train():
             all_val_preds = []
             all_val_labels = []
 
-            with torch.no_grad():
+            with torch.no_grad(): # no gradient calculations needed
                 for batch in tqdm(val_loader, desc=f"Fold {fold} - Epoch {epoch+1}/{Config.EPOCHS} [Val]", unit="batch"):
                     embeddings = batch['embeddings'].to(Config.DEVICE)
                     attention_mask = batch['attention_mask'].to(Config.DEVICE)
@@ -133,7 +133,7 @@ def train():
                     val_batches += 1
 
                     # Get predictions for metrics
-                    predictions = model(embeddings, attention_mask)
+                    predictions = model(embeddings, attention_mask) # dont give labels -> crf directly gives predictions
 
                     # Collect valid tokens (skip -100 labels)
                     for pred_seq, label_seq, mask in zip(predictions, token_labels, attention_mask):
@@ -165,7 +165,7 @@ def train():
             print(f"  Loss: Train={avg_train_loss:.4f}, Val={avg_val_loss:.4f}")
             print(f"  Metrics: TokenAcc={token_acc:.4f}, SeqAcc={seq_acc:.4f}, MCC={mcc:.4f}, Prec={precision:.4f}, Rec={recall:.4f}")
 
-            # Save best model for fold based on MCC
+            # Save best model for fold based on MCC TODO maybe alter that a bit
             if mcc > best_mcc:
                 patience_counter = 0
                 best_mcc = mcc

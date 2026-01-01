@@ -1,4 +1,4 @@
-"""Evaluation script for test set."""
+"""Evaluation for test set."""
 
 import torch
 import numpy as np
@@ -23,13 +23,7 @@ from .utils import get_test_data
 
 
 def evaluate_model(model_path: str = None, embeddings_path: str = None):
-    """
-    Evaluate the trained model on the test set.
 
-    Args:
-        model_path: Path to saved model weights. Defaults to Config.MODEL_SAVE_PATH.
-        embeddings_path: Path to test embeddings .npz file.
-    """
     model_path = model_path or Config.MODEL_SAVE_PATH
     embeddings_path = embeddings_path or (Config.OUTPUT_DIR / "test_embeddings.npz")
 
