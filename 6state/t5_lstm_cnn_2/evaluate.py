@@ -21,12 +21,9 @@ from .model import SPCNNClassifier
 from .utils import get_test_data
 
 
-def evaluate_model(model_path: str = None, embeddings_path: str = None):
+def evaluate_model(embeddings_path: str):
 
-    model_path = model_path or Config.MODEL_SAVE_PATH
-    embeddings_path = embeddings_path or (Config.OUTPUT_DIR / "test_embeddings.npz")
-
-    print(f"Loading model from {model_path}")
+    print(f"Loading model from {Config.MODEL_SAVE_PATH}")
     print(f"Using device: {Config.DEVICE}")
 
     # Load test data
@@ -46,8 +43,8 @@ def evaluate_model(model_path: str = None, embeddings_path: str = None):
         num_labels=Config.NUM_CLASSES,
     ).to(Config.DEVICE)
 
-    model.load_state_dict(torch.load(model_path, map_location=Config.DEVICE))
-    print(f"Model loaded from {model_path}")
+    model.load_state_dict(torch.load(Config.MODEL_SAVE_PATH, map_location=Config.DEVICE))
+    print(f"Model loaded from {Config.MODEL_SAVE_PATH}")
 
     # Evaluate
     model.eval()

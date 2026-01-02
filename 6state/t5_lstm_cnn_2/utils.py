@@ -19,10 +19,9 @@ def get_fold_paths(fold_num: int) -> dict:
         "val_emb": Config.DATA_PATH_FOLDS / f"fold_{fold_num}_val_embeddings.npz",
     }
 
-
 def prepare_fold_data(fold_num: int, batch_size: int = Config.BATCH_SIZE) -> tuple[DataLoader, DataLoader]:
 
-    paths = Config.get_fold_paths(fold_num)
+    paths = get_fold_paths(fold_num)
 
     train_dataset = SPDatasetWithEmbeddings(
         paths["train_csv"],
@@ -41,7 +40,7 @@ def prepare_fold_data(fold_num: int, batch_size: int = Config.BATCH_SIZE) -> tup
 
 def get_validation_labels(fold_num: int) -> list:
 
-    paths = Config.get_fold_paths(fold_num)
+    paths = get_fold_paths(fold_num)
     val_df = pd.read_csv(paths["val_csv"])
 
     # Filter sequences with 'P' labels

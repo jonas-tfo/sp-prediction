@@ -12,11 +12,11 @@ from sklearn.metrics import accuracy_score, matthews_corrcoef, precision_score, 
 from .config import Config
 from .metrics import sequence_level_accuracy
 from .model import SPCNNClassifier
-from .utils import get_validation_labels, prepare_fold_data
+from .utils import get_validation_labels, prepare_fold_data, ensure_dirs
 
 
 def train():
-    Config.ensure_dirs()
+    ensure_dirs()
 
     print(f"Using device: {Config.DEVICE}")
     print(f"Model save path: {Config.MODEL_SAVE_PATH}")
