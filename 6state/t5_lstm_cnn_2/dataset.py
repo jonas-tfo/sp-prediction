@@ -1,4 +1,5 @@
 
+from pathlib import Path
 import numpy as np
 import pandas as pd
 import torch
@@ -9,7 +10,7 @@ from .config import Config
 
 class SPDatasetWithEmbeddings(Dataset):
 
-    def __init__(self, csv_path: str, embeddings_path: str):
+    def __init__(self, csv_path: str | Path, embeddings_path: str):
 
         self.label_map = Config.LABEL_MAP
         self.df = pd.read_csv(csv_path)

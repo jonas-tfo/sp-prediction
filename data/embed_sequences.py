@@ -23,7 +23,7 @@ print(f"Using device: {DEVICE}")
 cwd = Path.cwd()
 BASE_DIR = cwd.parent
 
-DATA_PATH: Path = BASE_DIR / "data" / "aufgabe3"
+DATA_PATH = BASE_DIR / "data" / "aufgabe3"
 DATA_PATH_FOLDS: Path = DATA_PATH / "3-fold"
 
 print(f"Project base directory set to: {BASE_DIR}")

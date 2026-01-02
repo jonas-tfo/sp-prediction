@@ -1,4 +1,3 @@
-"""Evaluation for test set."""
 
 import torch
 import numpy as np
@@ -38,7 +37,6 @@ def evaluate_model(model_path: str = None, embeddings_path: str = None):
     test_dataset = SPDatasetWithEmbeddings(
         Config.TEST_CSV,
         embeddings_path,
-        Config.LABEL_MAP,
     )
     test_loader = DataLoader(test_dataset, batch_size=Config.BATCH_SIZE, shuffle=False)
 
