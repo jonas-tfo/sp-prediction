@@ -23,7 +23,7 @@ class SPCNNClassifier(nn.Module):
         self.lstm = nn.LSTM(
             input_size=1024,
             hidden_size=512,
-            num_layers=2,
+            num_layers=3,
             bidirectional=True,
             batch_first=True,
         )
@@ -33,10 +33,10 @@ class SPCNNClassifier(nn.Module):
 
     def forward(self, embeddings: torch.Tensor, attention_mask: torch.Tensor, labels: torch.Tensor = None):
 
-        hidden_states = embeddings.float()
+        hidden_states = embeddings.float() # has shape (batch_size, seq_len, embedding_dim)
 
         # Apply conv, batch normalization and ReLU
-        x_conv = self.conv(hidden_states.transpose(1, 2))
+        x_conv = self.conv(hidden_states.transpose(1, 2)) # 1d cnn (batch_size, embedding_dim, seq_len)
         x_conv = self.bn_conv(x_conv)
         x_conv = F.relu_(x_conv)
 

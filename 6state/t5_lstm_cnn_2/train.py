@@ -257,9 +257,6 @@ def train():
         if os.path.exists(temp_path):
             print(f"  - {temp_path}")
 
-    # Save results to pickle
-    losses_pickle_path = Config.OUTPUT_DIR / "6state_t5_lstm_cnn_fold_results.pkl"
-
     losses_data = {
         'fold_numbers': fold_results['fold_numbers'],
         'train_losses': fold_results['train_losses'],
@@ -284,10 +281,11 @@ def train():
         'num_folds': Config.NUM_FOLDS
     }
 
-    with open(losses_pickle_path, 'wb') as f:
+    # open pkl and save all metrics
+    with open(Config.TRAIN_VAL_LOSSES_PKL_SAVE_PATH, 'wb') as f:
         pickle.dump(losses_data, f)
 
-    print(f"\nTraining results saved to: {losses_pickle_path}")
+    print(f"\nTraining results saved to: {Config.TRAIN_VAL_LOSSES_PKL_SAVE_PATH}")
 
     return fold_results
 

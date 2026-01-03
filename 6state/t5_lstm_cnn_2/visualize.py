@@ -1,7 +1,6 @@
-"""Visualization functions for training metrics and model architecture."""
 
-import os
 import pickle
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
@@ -10,14 +9,7 @@ import numpy as np
 from .config import Config
 
 
-def plot_training_metrics(results_path: str = None):
-    """
-    Plot training metrics from saved results.
-
-    Args:
-        results_path: Path to pickle file with training results.
-    """
-    results_path = results_path or (Config.OUTPUT_DIR / "6state_t5_lstm_cnn_fold_results.pkl")
+def plot_training_metrics(results_path: Path  = Config.TRAIN_VAL_LOSSES_PKL_SAVE_PATH):
 
     with open(results_path, 'rb') as f:
         fold_results = pickle.load(f)
@@ -100,7 +92,7 @@ def plot_training_metrics(results_path: str = None):
     plt.suptitle('K-Fold Cross Validation Metrics (T5 LSTM-CNN)', fontsize=14, fontweight='bold')
     plt.tight_layout()
 
-    plot_path = Config.OUTPUT_DIR / '6state_t5_lstm_cnn_metrics_plot.png'
+    plot_path = Config.PLOTS_SAVE_DIR / '6state_t5_lstm_cnn_2_metrics_plot.png'
     plt.savefig(plot_path, dpi=150)
     print(f"Metrics plot saved to: {plot_path}")
     plt.show()
@@ -108,14 +100,7 @@ def plot_training_metrics(results_path: str = None):
     return fig
 
 
-def plot_best_metrics_bar(results_path: str = None):
-    """
-    Plot bar chart of best metrics across folds.
-
-    Args:
-        results_path: Path to pickle file with training results.
-    """
-    results_path = results_path or (Config.OUTPUT_DIR / "6state_t5_lstm_cnn_fold_results.pkl")
+def plot_best_metrics_bar(results_path: Path = Config.TRAIN_VAL_LOSSES_PKL_SAVE_PATH):
 
     with open(results_path, 'rb') as f:
         fold_results = pickle.load(f)
@@ -146,6 +131,7 @@ def plot_best_metrics_bar(results_path: str = None):
         np.mean(all_values['recall'])
     ]
 
+    # get lower and upper range for error bars
     if len(all_fold_metrics) > 1:
         min_values = [
             min(all_values['token_acc']),
@@ -201,7 +187,7 @@ def plot_best_metrics_bar(results_path: str = None):
 
     plt.tight_layout()
 
-    bar_path = Config.OUTPUT_DIR / '6state_t5_lstm_cnn_best_metrics_bar.png'
+    bar_path = Config.PLOTS_SAVE_DIR / '6state_t5_lstm_cnn_2_best_metrics_bar.png'
     plt.savefig(bar_path, dpi=150)
     print(f"Bar plot saved to: {bar_path}")
     plt.show()
@@ -210,28 +196,32 @@ def plot_best_metrics_bar(results_path: str = None):
 
 
 def draw_model_architecture():
-    """Draw a vertical diagram of the model architecture."""
-    fig, ax = plt.subplots(figsize=(6, 10))
+    """Draw a vertical diagram of the model architecture based on SPCNNClassifier in model.py."""
+    fig, ax = plt.subplots(figsize=(8, 10))
     ax.axis('off')
-
-    # Define blocks with (label, x, y)
-    blocks = [
-        ("Input Embeddings\n(Pre-computed T5)", 1.5, 9.0),
-        ("Attention Mask", 1.5, 8.2),
-        ("Conv1D\n(1024 → 1024, kernel=5)", 1.5, 7.0),
-        ("BatchNorm1D + ReLU", 1.5, 6.0),
-        ("BiLSTM\n(2 layers, 1024 → 512×2)", 1.5, 5.0),
-        ("Classifier\n(Linear: 1024 → 6)", 1.5, 4.0),
-        ("Dropout\n(p=0.35)", 1.5, 3.0),
-        ("CRF Layer\n(6 states)", 1.5, 2.0),
-        ("Per Token Predictions", 1.5, 1.0)
-    ]
 
     box_width = 2.0
     box_height = 0.6
 
-    # Draw blocks
-    for label, x, y in blocks:
+    # Top row: Input Embeddings and Attention Mask side by side
+    top_blocks = [
+        ("Input Embeddings\n(Pre-computed T5, dim=1024)", 0.5, 9.0),
+        ("Attention Mask", 4.5, 9.0),
+    ]
+
+    # Main architecture blocks (centered)
+    main_blocks = [
+        ("Conv1D\n(1024 → 1024, kernel=5, pad=2)", 2.5, 7.5),
+        ("BatchNorm1D + ReLU", 2.5, 6.5),
+        ("BiLSTM\n(3 layers, 1024 → 512×2)", 2.5, 5.5),
+        ("Classifier\n(Linear: 1024 → 6)", 2.5, 4.5),
+        ("Dropout\n(p=0.35)", 2.5, 3.5),
+        ("CRF Layer\n(6 states)", 2.5, 2.5),
+        ("Per Token Predictions", 2.5, 1.5)
+    ]
+
+    # Draw top blocks
+    for label, x, y in top_blocks:
         rect = mpatches.FancyBboxPatch(
             (x, y), box_width, box_height,
             boxstyle="round,pad=0.03",
@@ -240,20 +230,40 @@ def draw_model_architecture():
         ax.add_patch(rect)
         ax.text(x + box_width / 2, y + box_height / 2, label, ha='center', va='center', fontsize=10)
 
-    # Draw arrows between consecutive blocks
-    for i in range(len(blocks) - 1):
-        x1 = blocks[i][1] + box_width / 2
-        y1 = blocks[i][2]
-        y2 = blocks[i+1][2] + box_height
+    # Draw main blocks
+    for label, x, y in main_blocks:
+        rect = mpatches.FancyBboxPatch(
+            (x, y), box_width, box_height,
+            boxstyle="round,pad=0.03",
+            edgecolor='black', facecolor='white', linewidth=2
+        )
+        ax.add_patch(rect)
+        ax.text(x + box_width / 2, y + box_height / 2, label, ha='center', va='center', fontsize=10)
+
+    # Draw arrows from both top blocks to first main block
+    first_main = main_blocks[0]
+    for top_block in top_blocks:
+        x_start = top_block[1] + box_width / 2
+        y_start = top_block[2]
+        x_end = first_main[1] + box_width / 2
+        y_end = first_main[2] + box_height
+        ax.annotate('', xy=(x_end, y_end), xytext=(x_start, y_start),
+                    arrowprops=dict(facecolor='black', arrowstyle='->', connectionstyle='arc3,rad=0'))
+
+    # Draw arrows between consecutive main blocks
+    for i in range(len(main_blocks) - 1):
+        x1 = main_blocks[i][1] + box_width / 2
+        y1 = main_blocks[i][2]
+        y2 = main_blocks[i+1][2] + box_height
         ax.annotate('', xy=(x1, y2), xytext=(x1, y1),
                     arrowprops=dict(facecolor='black', arrowstyle='->'))
 
     plt.title("SPCNNClassifier Architecture (T5)", fontsize=14, fontweight='bold')
     plt.ylim(0, 10)
-    plt.xlim(0, 5)
+    plt.xlim(0, 7)
     plt.tight_layout()
 
-    arch_path = Config.OUTPUT_DIR / 'model_architecture.png'
+    arch_path = Config.PLOTS_SAVE_DIR / 'model_architecture_6state_t5_lstm_cnn_2.png'
     plt.savefig(arch_path, dpi=150)
     print(f"Architecture diagram saved to: {arch_path}")
     plt.show()
@@ -261,8 +271,8 @@ def draw_model_architecture():
     return fig
 
 
-def plot_all(results_path: str = None):
-    """Generate all plots."""
+def plot_all(results_path: Path = Config.TRAIN_VAL_LOSSES_PKL_SAVE_PATH):
+
     plot_training_metrics(results_path)
     plot_best_metrics_bar(results_path)
     draw_model_architecture()
@@ -270,3 +280,6 @@ def plot_all(results_path: str = None):
 
 if __name__ == "__main__":
     plot_all()
+
+
+

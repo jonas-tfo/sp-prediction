@@ -107,7 +107,7 @@ def evaluate_model(embeddings_path: str):
     plt.tight_layout()
 
     # Save confusion matrix
-    cm_path = Config.OUTPUT_DIR / "confusion_matrix.png"
+    cm_path = Config.PLOTS_SAVE_DIR / "confusion_matrix_t5_lstm_cnn_2.png"
     plt.savefig(cm_path, dpi=150)
     print(f"\nConfusion matrix saved to: {cm_path}")
     plt.show()
@@ -125,4 +125,4 @@ def evaluate_model(embeddings_path: str):
 
 
 if __name__ == "__main__":
-    evaluate_model()
+    evaluate_model(Config.TEST_EMBEDINGS)

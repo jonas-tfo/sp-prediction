@@ -1,34 +1,10 @@
-"""Metrics for evaluating signal peptide predictions."""
 
 from typing import List
-
-from sklearn.metrics import (
-    accuracy_score,
-    f1_score,
-    matthews_corrcoef,
-    precision_score,
-    recall_score,
-)
+from sklearn.metrics import accuracy_score, f1_score, matthews_corrcoef, precision_score, recall_score
 
 
-def sequence_level_accuracy(
-    preds_flat: List[int],
-    labels_flat: List[int],
-    label_seqs: List[List[int]],
-) -> float:
-    """
-    Calculate sequence-level accuracy, skipping -100 (ignored) positions.
+def sequence_level_accuracy(preds_flat: List[int], labels_flat: List[int], label_seqs: List[List[int]]) -> float:
 
-    A sequence is correct only if ALL valid positions match.
-
-    Args:
-        preds_flat: Flat list of predictions.
-        labels_flat: Flat list of labels.
-        label_seqs: Original label sequences to determine sequence boundaries.
-
-    Returns:
-        Sequence-level accuracy (0.0 to 1.0).
-    """
     # Reconstruct sequences from flat predictions
     seq_lengths = [len(seq) for seq in label_seqs]
     preds_seq = []
@@ -52,22 +28,9 @@ def sequence_level_accuracy(
     return correct / total if total > 0 else 0.0
 
 
-def compute_metrics(
-    all_preds: List[int],
-    all_labels: List[int],
-    label_seqs: List[List[int]] = None,
-) -> dict:
-    """
-    Compute all metrics for predictions.
+# TODO actually use this in the training, currently being done within train file
+def compute_metrics(all_preds: List[int], all_labels: List[int], label_seqs: List[List[int]] = None) -> dict:
 
-    Args:
-        all_preds: List of predicted labels.
-        all_labels: List of true labels.
-        label_seqs: Optional label sequences for sequence-level accuracy.
-
-    Returns:
-        Dictionary with all computed metrics.
-    """
     metrics = {
         "token_acc": accuracy_score(all_labels, all_preds),
         "mcc": matthews_corrcoef(all_labels, all_preds),

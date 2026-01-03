@@ -34,9 +34,12 @@ class Config:
     DATA_PATH = BASE_DIR / "data" / "aufgabe3"
     DATA_PATH_FOLDS = DATA_PATH / "3-fold"
     TEST_CSV = DATA_PATH / "reduced_30_signalP6_test.csv"
+    TEST_EMBEDINGS = DATA_PATH / "reduced_30_signalP6_test_embeddings.npz"
+
 
     # Output paths (for saving results)
-    TRAIN_VAL_LOSSES_DATA_SAVE_PATH = OUTPUT_DIR
+    PLOTS_SAVE_DIR = OUTPUT_DIR / "plots"
+    TRAIN_VAL_LOSSES_PKL_SAVE_PATH = PLOTS_SAVE_DIR / "6state_t5_lstm_cnn_fold_results.pkl"
 
     # Model Saving Paths
     MODEL_DIR = OUTPUT_DIR / "models"

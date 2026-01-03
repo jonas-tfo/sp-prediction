@@ -8,8 +8,10 @@ from .dataset import SPDatasetWithEmbeddings
 
 
 def ensure_dirs():
-    Config.MODEL_DIR.mkdir(parents=True, exist_ok=True)
     Config.OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    Config.MODEL_DIR.mkdir(parents=True, exist_ok=True)
+    Config.PLOTS_SAVE_DIR.mkdir(parents=True, exist_ok=True)
+
 
 def get_fold_paths(fold_num: int) -> dict:
     return {
