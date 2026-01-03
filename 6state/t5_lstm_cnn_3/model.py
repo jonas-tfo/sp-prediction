@@ -48,29 +48,30 @@ class SPCNNClassifier(nn.Module):
 
         hidden_states = embeddings.float() # has shape (batch_size, seq_len, embedding_dim)
 
-        # Apply 3 conv layers, batch normalization and ReLU
         transposed_hidden_states = hidden_states.transpose(1, 2) # transpose because 1d cnn needs (batch_size, embedding_dim, seq_len)
 
+        # Apply 3 conv layers in parallel with 256 output channels each
         conv5 = self.conv5(transposed_hidden_states)
         conv7 = self.conv7(transposed_hidden_states)
         conv9 = self.conv9(transposed_hidden_states)
 
-        x_conv = torch.cat([conv5, conv7, conv9], dim=1) # concatenate along channel dimension
+        # concatenate along channel dimension, shape is (batch_size, 256*3, seq_len)
+        x_conv = torch.cat([conv5, conv7, conv9], dim=1)
 
         # apply batch norm and GeLU
         x_conv = self.bn_conv(x_conv)
         x_conv = F.gelu(x_conv)
 
-        # Transpose for LSTM
+        # Transpose back for LSTM
         x_lstm_input = x_conv.transpose(1, 2)
 
         # Apply LSTM
         lstm_out, _ = self.lstm(x_lstm_input)
 
-        # apply dropout
+        # apply dropout before classifier
         lstm_out = self.dropout(lstm_out)
 
-        # Classifier
+        # linear classifier to output layer
         logits = self.classifier(lstm_out)
 
         # loss during training (mean negative log likelihood)
