@@ -12,32 +12,33 @@ class SPCNNClassifier(nn.Module):
         super().__init__()
         self.dropout = nn.Dropout(0.35)
 
-        self.conv = nn.Conv1d(
+        self.conv9 = nn.Conv1d(
             in_channels=embedding_dim,
-            out_channels=1024,
+            out_channels=256,
             kernel_size=9,
             padding=4,
         )
-        self.conv1 = nn.Conv1d(
+        self.conv7 = nn.Conv1d(
             in_channels=embedding_dim,
-            out_channels=1024,
-            kernel_size=7,
-            padding=3,
+            out_channels=256,
+            kernel_size=9,
+            padding=4,
         )
-        self.conv2 = nn.Conv1d(
+        self.conv5 = nn.Conv1d(
             in_channels=embedding_dim,
-            out_channels=1024,
+            out_channels=256,
             kernel_size=5,
             padding=2,
         )
         self.bn_conv = nn.BatchNorm1d(1024)
 
         self.lstm = nn.LSTM(
-            input_size=1024,
+            input_size=256 * 3,
             hidden_size=512,
-            num_layers=3,
+            num_layers=2,
             bidirectional=True,
-            batch_first=True,
+            batch_first=True, # refers to the shape of input and output tensors
+            dropout=0.2,
         )
 
         self.classifier = nn.Linear(512 * 2, num_labels)
@@ -48,11 +49,17 @@ class SPCNNClassifier(nn.Module):
         hidden_states = embeddings.float() # has shape (batch_size, seq_len, embedding_dim)
 
         # Apply 3 conv layers, batch normalization and ReLU
-        x_conv = self.conv(hidden_states.transpose(1, 2)) # 1d cnn needs (batch_size, embedding_dim, seq_len)
-        x_conv = self.conv1(x_conv)
-        x_conv = self.conv2(x_conv)
+        transposed_hidden_states = hidden_states.transpose(1, 2) # transpose because 1d cnn needs (batch_size, embedding_dim, seq_len)
+
+        conv5 = self.conv5(transposed_hidden_states)
+        conv7 = self.conv7(transposed_hidden_states)
+        conv9 = self.conv9(transposed_hidden_states)
+
+        x_conv = torch.cat([conv5, conv7, conv9], dim=1) # concatenate along channel dimension
+
+        # apply batch norm and GeLU
         x_conv = self.bn_conv(x_conv)
-        x_conv = F.relu_(x_conv)
+        x_conv = F.gelu(x_conv)
 
         # Transpose for LSTM
         x_lstm_input = x_conv.transpose(1, 2)
@@ -60,9 +67,11 @@ class SPCNNClassifier(nn.Module):
         # Apply LSTM
         lstm_out, _ = self.lstm(x_lstm_input)
 
+        # apply dropout
+        lstm_out = self.dropout(lstm_out)
+
         # Classifier
-        x_linear = self.classifier(lstm_out)
-        logits = self.dropout(x_linear)
+        logits = self.classifier(lstm_out)
 
         # loss during training (mean negative log likelihood)
         if labels is not None:

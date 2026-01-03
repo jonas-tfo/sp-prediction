@@ -39,12 +39,12 @@ class Config:
 
     # Output paths (for saving results)
     PLOTS_SAVE_DIR = OUTPUT_DIR / "plots"
-    TRAIN_VAL_LOSSES_PKL_SAVE_PATH = PLOTS_SAVE_DIR / "6state_t5_lstm_cnn_fold_results.pkl"
+    TRAIN_VAL_LOSSES_PKL_SAVE_PATH = PLOTS_SAVE_DIR / "6state_t5_lstm_cnn_2_fold_results.pkl"
 
     # Model Saving Paths
     MODEL_DIR = OUTPUT_DIR / "models"
-    MODEL_SAVE_PATH = MODEL_DIR / "6state_t5_lstm_cnn.pt"
-    MODEL_SAVE_PATH_TEMP = str(MODEL_DIR / "6state_t5_lstm_cnn_fold{}.pt")
+    MODEL_SAVE_PATH = MODEL_DIR / "6state_t5_lstm_cnn_2.pt"
+    MODEL_SAVE_PATH_TEMP = str(MODEL_DIR / "6state_t5_lstm_cnn_2_fold{}.pt")
 
     # Label mapping
     LABEL_MAP = {'S': 0, 'T': 1, 'L': 2, 'I': 3, 'M': 4, 'O': 5}

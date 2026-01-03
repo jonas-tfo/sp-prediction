@@ -26,7 +26,7 @@ class Config:
     # Main Working Dir Paths
     CWD = Path(__file__).resolve().parent
 
-    # Output directory (within t5_lstm_cnn_2)
+    # Output directory (within t5_lstm_cnn_3)
     OUTPUT_DIR = CWD / "outputs"
 
     # Data paths (for reading input data)
