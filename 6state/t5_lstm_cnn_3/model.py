@@ -15,6 +15,18 @@ class SPCNNClassifier(nn.Module):
         self.conv = nn.Conv1d(
             in_channels=embedding_dim,
             out_channels=1024,
+            kernel_size=9,
+            padding=4,
+        )
+        self.conv1 = nn.Conv1d(
+            in_channels=embedding_dim,
+            out_channels=1024,
+            kernel_size=7,
+            padding=3,
+        )
+        self.conv2 = nn.Conv1d(
+            in_channels=embedding_dim,
+            out_channels=1024,
             kernel_size=5,
             padding=2,
         )
@@ -35,14 +47,15 @@ class SPCNNClassifier(nn.Module):
 
         hidden_states = embeddings.float() # has shape (batch_size, seq_len, embedding_dim)
 
-        # Apply conv, batch normalization and ReLU
-        x_conv = self.conv(hidden_states.transpose(1, 2)) # 1d cnn (batch_size, embedding_dim, seq_len)
+        # Apply 3 conv layers, batch normalization and ReLU
+        x_conv = self.conv(hidden_states.transpose(1, 2)) # 1d cnn needs (batch_size, embedding_dim, seq_len)
+        x_conv = self.conv1(x_conv)
+        x_conv = self.conv2(x_conv)
         x_conv = self.bn_conv(x_conv)
         x_conv = F.relu_(x_conv)
 
         # Transpose for LSTM
-        x_lstm_input = x_conv.transpose(1, 2) # back to (batch_size, seq_len, embedding_dim)
-
+        x_lstm_input = x_conv.transpose(1, 2)
 
         # Apply LSTM
         lstm_out, _ = self.lstm(x_lstm_input)
@@ -61,8 +74,8 @@ class SPCNNClassifier(nn.Module):
 
             loss = -self.crf(logits, mod_labels, mask=crf_mask, reduction="mean")
             return loss
+        # predictions during inference (Viterbi)
         else:
-            # predictions during inference (Viterbi)
             # Decode only valid positions
             crf_mask = attention_mask.bool()
             predictions = self.crf.decode(logits, mask=crf_mask)
