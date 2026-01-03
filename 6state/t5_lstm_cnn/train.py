@@ -71,16 +71,17 @@ def train():
         best_metrics = {}
         patience_counter = 0
 
+
+        # Create optimizer
+        optimizer = torch.optim.AdamW([
+            {"params": model.conv.parameters(), "lr": Config.LR},
+            {"params": model.classifier.parameters(), "lr": Config.LR},
+            {"params": model.lstm.parameters(), "lr": Config.LR},
+            {"params": model.crf.parameters(), "lr": Config.LR},
+        ])
+
         # inner training loop for this fold (epochs for this fold)
         for epoch in range(Config.EPOCHS):
-
-            # Create optimizer
-            optimizer = torch.optim.AdamW([
-                {"params": model.conv.parameters(), "lr": Config.LR},
-                {"params": model.classifier.parameters(), "lr": Config.LR},
-                {"params": model.lstm.parameters(), "lr": Config.LR},
-                {"params": model.crf.parameters(), "lr": Config.LR},
-            ])
 
             # Training phase
             model.train()
@@ -95,14 +96,14 @@ def train():
                     attention_mask = batch['attention_mask'].to(Config.DEVICE)
                     token_labels = batch['labels'].to(Config.DEVICE)
 
-                    optimizer.zero_grad() # clear the gradients from previous step
+                    optimizer.zero_grad() # clear the gradients from previous step, will accumulate otherwise
                     loss = model(embeddings, attention_mask, token_labels) # call forward func, crf gives loss directly during training
 
-                    scaler.scale(loss).backward() # backpropagation, scales gradients for fp16
-                    scaler.unscale_(optimizer)
-                    torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
-                    scaler.step(optimizer)
-                    scaler.update()
+                    scaler.scale(loss).backward() # backpropagation, scales gradients for fp16, i.e. prevents underflow to 0 using multiplier
+                    scaler.unscale_(optimizer) # unscales gradients again to not use the inflated values
+                    torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0) # prevent gradient exploding -> more stable training
+                    scaler.step(optimizer) # weights are updated (this is skipped if gradients are deemed invalid)
+                    scaler.update() # adjust the scale factor for next iteration
 
                     total_train_loss += loss.item()
                     pbar.set_postfix(loss=loss.item())
@@ -122,7 +123,7 @@ def train():
             all_val_preds = []
             all_val_labels = []
 
-            with torch.no_grad(): # no gradient calculations needed
+            with torch.no_grad(): # no gradient calculations needed for inference
                 for batch in tqdm(val_loader, desc=f"Fold {fold} - Epoch {epoch+1}/{Config.EPOCHS} [Val]", unit="batch"):
                     embeddings = batch['embeddings'].to(Config.DEVICE)
                     attention_mask = batch['attention_mask'].to(Config.DEVICE)

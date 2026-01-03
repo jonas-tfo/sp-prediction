@@ -1,4 +1,3 @@
-"""SPCNNClassifier model architecture."""
 
 import torch
 import torch.nn as nn
@@ -51,6 +50,7 @@ class SPCNNClassifier(nn.Module):
         x_linear = self.classifier(lstm_out)
         logits = self.dropout(x_linear)
 
+        # loss during training (mean negative log likelihood)
         if labels is not None:
             crf_mask = (attention_mask.bool()) & (labels != -100)
 
@@ -60,8 +60,11 @@ class SPCNNClassifier(nn.Module):
 
             loss = -self.crf(logits, mod_labels, mask=crf_mask, reduction="mean")
             return loss
+        # predictions during inference (Viterbi)
         else:
             # Decode only valid positions
             crf_mask = attention_mask.bool()
             predictions = self.crf.decode(logits, mask=crf_mask)
             return predictions
+
+
