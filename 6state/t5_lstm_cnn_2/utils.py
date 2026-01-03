@@ -7,12 +7,21 @@ from .config import Config
 from .dataset import SPDatasetWithEmbeddings
 
 
-def prepare_fold_data(
-    fold_num: int,
-    batch_size: int = None,
-) -> tuple[DataLoader, DataLoader]:
-    batch_size = batch_size or Config.BATCH_SIZE
-    paths = Config.get_fold_paths(fold_num)
+def ensure_dirs():
+    Config.MODEL_DIR.mkdir(parents=True, exist_ok=True)
+    Config.OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
+def get_fold_paths(fold_num: int) -> dict:
+    return {
+        "train_csv": Config.DATA_PATH_FOLDS / f"fold_{fold_num}_train.csv",
+        "val_csv": Config.DATA_PATH_FOLDS / f"fold_{fold_num}_val.csv",
+        "train_emb": Config.DATA_PATH_FOLDS / f"fold_{fold_num}_train_embeddings.npz",
+        "val_emb": Config.DATA_PATH_FOLDS / f"fold_{fold_num}_val_embeddings.npz",
+    }
+
+def prepare_fold_data(fold_num: int, batch_size: int = Config.BATCH_SIZE) -> tuple[DataLoader, DataLoader]:
+
+    paths = get_fold_paths(fold_num)
 
     train_dataset = SPDatasetWithEmbeddings(
         paths["train_csv"],
@@ -31,7 +40,7 @@ def prepare_fold_data(
 
 def get_validation_labels(fold_num: int) -> list:
 
-    paths = Config.get_fold_paths(fold_num)
+    paths = get_fold_paths(fold_num)
     val_df = pd.read_csv(paths["val_csv"])
 
     # Filter sequences with 'P' labels
