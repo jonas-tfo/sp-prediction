@@ -160,7 +160,7 @@ def plot_best_metrics_bar(results_path: Path = Config.TRAIN_VAL_LOSSES_PKL_SAVE_
         ax.axhline(y=y_tick, color='lightgray', linewidth=0.8, zorder=3)
 
     ax.set_ylabel('Score')
-    ax.set_title(f'Mean Validation Metrics Across {num_folds} Folds (Error bars: ±1 std)')
+    ax.set_title(f'Mean Validation Metrics Across {num_folds} Folds (Error bars: ± std)')
     ax.set_xticks(x)
     ax.set_xticklabels(metrics_names)
     ax.set_ylim(0, 1.05)
