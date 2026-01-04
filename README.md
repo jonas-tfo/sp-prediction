@@ -12,6 +12,8 @@
 - moved dropout before the classifier at the end
 - increased patience to stop early stopping
 
+-> seemed to only very very barely improve performance
+
 ## t5_lstm_cnn_4
 
 -

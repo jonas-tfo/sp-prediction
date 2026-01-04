@@ -130,34 +130,21 @@ def plot_best_metrics_bar(results_path: Path = Config.TRAIN_VAL_LOSSES_PKL_SAVE_
         np.mean(all_values['recall'])
     ]
 
-    # get lower and upper range for error bars
+    # Calculate standard deviation for error bars
     if len(all_fold_metrics) > 1:
-        min_values = [
-            min(all_values['token_acc']),
-            min(all_values['seq_acc']),
-            min(all_values['mcc']),
-            min(all_values['precision']),
-            min(all_values['recall'])
+        std_values = [
+            np.std(all_values['token_acc']),
+            np.std(all_values['seq_acc']),
+            np.std(all_values['mcc']),
+            np.std(all_values['precision']),
+            np.std(all_values['recall'])
         ]
-
-        max_values = [
-            max(all_values['token_acc']),
-            max(all_values['seq_acc']),
-            max(all_values['mcc']),
-            max(all_values['precision']),
-            max(all_values['recall'])
-        ]
-
-        # Calculate asymmetric error bars
-        yerr_lower = [max(0, mean - min_val) for mean, min_val in zip(mean_values, min_values)]
-        yerr_upper = [max(0, max_val - mean) for max_val, mean in zip(max_values, mean_values)]
     else:
-        yerr_lower = [0] * len(mean_values)
-        yerr_upper = [0] * len(mean_values)
+        std_values = [0] * len(mean_values)
 
     # Plot bars
     ax.bar(x, mean_values, width, color='steelblue', edgecolor='none', zorder=2)
-    ax.errorbar(x, mean_values, yerr=[yerr_lower, yerr_upper], fmt='none',
+    ax.errorbar(x, mean_values, yerr=std_values, fmt='none',
                 ecolor='black', capsize=5, capthick=1.5, elinewidth=1.5, zorder=4)
 
     # Styling
@@ -173,16 +160,16 @@ def plot_best_metrics_bar(results_path: Path = Config.TRAIN_VAL_LOSSES_PKL_SAVE_
         ax.axhline(y=y_tick, color='lightgray', linewidth=0.8, zorder=3)
 
     ax.set_ylabel('Score')
-    ax.set_title(f'Mean Validation Metrics Across {num_folds} Folds (Error bars: min/max)')
+    ax.set_title(f'Mean Validation Metrics Across {num_folds} Folds (Error bars: ±1 std)')
     ax.set_xticks(x)
     ax.set_xticklabels(metrics_names)
     ax.set_ylim(0, 1.05)
     ax.set_yticks(yticks)
 
-    # Value labels
-    max_yerr = max(yerr_upper) if max(yerr_upper) > 0 else 0.02
-    for i, val in enumerate(mean_values):
-        ax.text(i, val + max_yerr + 0.02, f'{val:.3f}', ha='center', va='bottom', fontsize=9)
+    # Value labels with mean ± std
+    max_yerr = max(std_values) if max(std_values) > 0 else 0.02
+    for i, (val, std) in enumerate(zip(mean_values, std_values)):
+        ax.text(i, val + max_yerr + 0.02, f'{val:.3f} ± {std:.3f}', ha='center', va='bottom', fontsize=9)
 
     plt.tight_layout()
 
