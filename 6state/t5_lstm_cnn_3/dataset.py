@@ -32,7 +32,7 @@ class SPDatasetWithEmbeddings(Dataset):
         uniprot_id = row["uniprot_id"]
         labels = row["label"]
 
-        # Get embedding (seq_len, 1024) TODO make sure its being squeezed
+        # Get embedding (seq_len, 1024) TODO look at squeezing again, batch dimension added again during training??
         embedding = torch.tensor(self.embeddings[uniprot_id], dtype=torch.float32) # (seq_len, hidden_size)
         seq_len = embedding.shape[0]
 

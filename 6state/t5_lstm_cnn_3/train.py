@@ -5,7 +5,7 @@ import pickle
 import shutil
 
 import torch
-from torch.amp import GradScaler
+from torch.amp.grad_scaler import GradScaler
 from tqdm import tqdm
 from sklearn.metrics import accuracy_score, matthews_corrcoef, precision_score, recall_score
 
@@ -96,13 +96,13 @@ def train():
                     attention_mask = batch['attention_mask'].to(Config.DEVICE)
                     token_labels = batch['labels'].to(Config.DEVICE)
 
-                    optimizer.zero_grad() # clear the gradients from previous step, will accumulate otherwise
+                    optimizer.zero_grad() # clear the gradients from previous batch, will accumulate otherwise
                     loss = model(embeddings, attention_mask, token_labels) # call forward func, crf gives loss directly during training
 
                     scaler.scale(loss).backward() # backpropagation, scales gradients for fp16, i.e. prevents underflow to 0 using multiplier
                     scaler.unscale_(optimizer) # unscales gradients again to not use the inflated values
                     torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0) # prevent gradient exploding -> more stable training
-                    scaler.step(optimizer) # weights are updated (this is skipped if gradients are deemed invalid)
+                    scaler.step(optimizer) # weights are updated using computed gradients (this is skipped if gradients are deemed invalid)
                     scaler.update() # adjust the scale factor for next iteration
 
                     total_train_loss += loss.item()
@@ -151,8 +151,8 @@ def train():
                 token_acc = accuracy_score(all_val_labels, all_val_preds)
                 seq_acc = sequence_level_accuracy(all_val_preds, all_val_labels, val_label_seqs)
                 mcc = matthews_corrcoef(all_val_labels, all_val_preds)
-                precision = precision_score(all_val_labels, all_val_preds, average='weighted', zero_division=0)
-                recall = recall_score(all_val_labels, all_val_preds, average='weighted', zero_division=0)
+                precision = precision_score(all_val_labels, all_val_preds, average='weighted', zero_division="warn")
+                recall = recall_score(all_val_labels, all_val_preds, average='weighted', zero_division="warn")
             else:
                 token_acc = seq_acc = mcc = precision = recall = 0.0
 
