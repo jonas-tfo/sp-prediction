@@ -92,7 +92,7 @@ def plot_training_metrics(results_path: Path  = Config.TRAIN_VAL_LOSSES_PKL_SAVE
     plt.suptitle('K-Fold Cross Validation Metrics (T5 LSTM-CNN)', fontsize=14, fontweight='bold')
     plt.tight_layout()
 
-    plot_path = Config.PLOTS_SAVE_DIR / '6state_t5_lstm_cnn_4_metrics_plot.png'
+    plot_path = Config.PLOTS_SAVE_DIR / '6state_t5_lstm_cnn_5_metrics_plot.png'
     plt.savefig(plot_path, dpi=150)
     print(f"Metrics plot saved to: {plot_path}")
 
@@ -173,7 +173,7 @@ def plot_best_metrics_bar(results_path: Path = Config.TRAIN_VAL_LOSSES_PKL_SAVE_
 
     plt.tight_layout()
 
-    bar_path = Config.PLOTS_SAVE_DIR / '6state_t5_lstm_cnn_4_best_metrics_bar.png'
+    bar_path = Config.PLOTS_SAVE_DIR / '6state_t5_lstm_cnn_5_best_metrics_bar.png'
     plt.savefig(bar_path, dpi=150)
     print(f"Bar plot saved to: {bar_path}")
 
@@ -248,7 +248,7 @@ def draw_model_architecture():
     plt.xlim(0, 7)
     plt.tight_layout()
 
-    arch_path = Config.PLOTS_SAVE_DIR / 'model_architecture_6state_t5_lstm_cnn_4.png'
+    arch_path = Config.PLOTS_SAVE_DIR / 'model_architecture_6state_t5_lstm_cnn_5.png'
     plt.savefig(arch_path, dpi=150)
     print(f"Architecture diagram saved to: {arch_path}")
 
