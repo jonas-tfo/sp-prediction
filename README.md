@@ -8,5 +8,10 @@
 
 - added two more cnn layers after the first cnn layer for more complex feature extraction that are concatenated on the channel dimension
 - lstm layer after the three cnn layers (reduced layers to 2)
-- using gelu activation function for better non-linearity when working with transformers compared to relu
+- using gelu activation function to attempt better non-linearity when working with transformers compared to relu
 - moved dropout before the classifier at the end
+- increased patience to stop early stopping
+
+## t5_lstm_cnn_4
+
+-

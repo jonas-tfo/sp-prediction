@@ -6,6 +6,7 @@ from pathlib import Path
 class Config:
     # Model
     MODEL_NAME = "Rostlab/prot_t5_xl_half_uniref50-enc"
+    MODEL_NAME_SHORT = MODEL_NAME.split("/")[1]
     EMBEDDING_DIM = 1024
     NUM_CLASSES = 6
 
@@ -14,7 +15,7 @@ class Config:
     EPOCHS = 20
     LR = 0.001
     NUM_FOLDS = 3
-    PATIENCE = 4
+    PATIENCE = 7
 
     # Device
     DEVICE = (
@@ -32,9 +33,10 @@ class Config:
     # Data paths (for reading input data)
     BASE_DIR = Path(__file__).resolve().parent.parent.parent
     DATA_PATH = BASE_DIR / "data" / "aufgabe3"
-    DATA_PATH_FOLDS = DATA_PATH / "3-fold"
+    DATA_PATH_FOLDS = DATA_PATH / f"{NUM_FOLDS}-fold"
+    DATA_PATH_FOLDS_EMBEDDINGS = DATA_PATH / f"{NUM_FOLDS}-fold" / MODEL_NAME_SHORT 
     TEST_CSV = DATA_PATH / "reduced_30_signalP6_test.csv"
-    TEST_EMBEDINGS = DATA_PATH / "reduced_30_signalP6_test_embeddings.npz"
+    TEST_EMBEDINGS = DATA_PATH / "embeddings" / MODEL_NAME_SHORT / f"reduced_30_signalP6_test_embeddings_{MODEL_NAME_SHORT}.npz"
 
 
     # Output paths (for saving results)

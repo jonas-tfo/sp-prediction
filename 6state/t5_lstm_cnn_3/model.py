@@ -21,8 +21,8 @@ class SPCNNClassifier(nn.Module):
         self.conv7 = nn.Conv1d(
             in_channels=embedding_dim,
             out_channels=256,
-            kernel_size=9,
-            padding=4,
+            kernel_size=7,
+            padding=3,
         )
         self.conv5 = nn.Conv1d(
             in_channels=embedding_dim,
@@ -30,7 +30,7 @@ class SPCNNClassifier(nn.Module):
             kernel_size=5,
             padding=2,
         )
-        self.bn_conv = nn.BatchNorm1d(1024)
+        self.bn_conv = nn.BatchNorm1d(256 * 3)
 
         self.lstm = nn.LSTM(
             input_size=256 * 3,
@@ -38,7 +38,6 @@ class SPCNNClassifier(nn.Module):
             num_layers=2,
             bidirectional=True,
             batch_first=True, # refers to the shape of input and output tensors
-            dropout=0.2,
         )
 
         self.classifier = nn.Linear(512 * 2, num_labels)

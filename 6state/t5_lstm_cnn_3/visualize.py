@@ -95,7 +95,6 @@ def plot_training_metrics(results_path: Path  = Config.TRAIN_VAL_LOSSES_PKL_SAVE
     plot_path = Config.PLOTS_SAVE_DIR / '6state_t5_lstm_cnn_2_metrics_plot.png'
     plt.savefig(plot_path, dpi=150)
     print(f"Metrics plot saved to: {plot_path}")
-    plt.show()
 
     return fig
 
@@ -190,7 +189,6 @@ def plot_best_metrics_bar(results_path: Path = Config.TRAIN_VAL_LOSSES_PKL_SAVE_
     bar_path = Config.PLOTS_SAVE_DIR / '6state_t5_lstm_cnn_2_best_metrics_bar.png'
     plt.savefig(bar_path, dpi=150)
     print(f"Bar plot saved to: {bar_path}")
-    plt.show()
 
     return fig
 
@@ -266,7 +264,6 @@ def draw_model_architecture():
     arch_path = Config.PLOTS_SAVE_DIR / 'model_architecture_6state_t5_lstm_cnn_2.png'
     plt.savefig(arch_path, dpi=150)
     print(f"Architecture diagram saved to: {arch_path}")
-    plt.show()
 
     return fig
 

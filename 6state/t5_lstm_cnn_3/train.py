@@ -74,7 +74,9 @@ def train():
 
         # Create optimizer
         optimizer = torch.optim.AdamW([
-            {"params": model.conv.parameters(), "lr": Config.LR},
+            {"params": model.conv5.parameters(), "lr": Config.LR},
+            {"params": model.conv7.parameters(), "lr": Config.LR},
+            {"params": model.conv9.parameters(), "lr": Config.LR},
             {"params": model.classifier.parameters(), "lr": Config.LR},
             {"params": model.lstm.parameters(), "lr": Config.LR},
             {"params": model.crf.parameters(), "lr": Config.LR},
