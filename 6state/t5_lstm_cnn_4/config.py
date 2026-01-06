@@ -36,12 +36,12 @@ class Config:
     DATA_PATH_FOLDS = DATA_PATH / f"{NUM_FOLDS}-fold"
     DATA_PATH_FOLDS_EMBEDDINGS = DATA_PATH / f"{NUM_FOLDS}-fold" / MODEL_NAME_SHORT 
     TEST_CSV = DATA_PATH / "reduced_30_signalP6_test.csv"
-    TEST_EMBEDINGS = DATA_PATH / "embeddings" / MODEL_NAME_SHORT / f"reduced_30_signalP6_test_embeddings_{MODEL_NAME_SHORT}.npz"
-
+    TEST_EMBEDINGS = DATA_PATH / MODEL_NAME_SHORT / f"reduced_30_signalP6_test_embeddings.npz"
 
     # Output paths (for saving results)
     PLOTS_SAVE_DIR = OUTPUT_DIR / "plots"
     TRAIN_VAL_LOSSES_PKL_SAVE_PATH = PLOTS_SAVE_DIR / "6state_t5_lstm_cnn_4_fold_results.pkl"
+    METRICS_SAVE_PATH = PLOTS_SAVE_DIR / "6state_t5_lstm_cnn_4_classreport.txt"
 
     # Model Saving Paths
     MODEL_DIR = OUTPUT_DIR / "models"

@@ -13,6 +13,7 @@ from sklearn.metrics import (
     recall_score,
 )
 import matplotlib.pyplot as plt
+from pathlib import Path
 
 from .config import Config
 from .dataset import SPDatasetWithEmbeddings
@@ -21,7 +22,7 @@ from .model import SPCNNClassifier
 from .utils import get_test_data
 
 
-def evaluate_model(embeddings_path: str):
+def evaluate_model(embeddings_path) -> dict:
 
     print(f"Loading model from {Config.MODEL_SAVE_PATH}")
     print(f"Using device: {Config.DEVICE}")
@@ -72,12 +73,14 @@ def evaluate_model(embeddings_path: str):
                         all_preds.append(pred)
                         all_labels.append(true.item())
 
+    class_report = classification_report(all_labels, all_preds, target_names=list(Config.LABEL_MAP.keys()))
+
     # Calculate metrics
     print("\n" + "="*60)
     print("Test Set Results")
     print("="*60)
     print("\nClassification Report:")
-    print(classification_report(all_labels, all_preds, target_names=list(Config.LABEL_MAP.keys())))
+    print(class_report)
 
     f1_weighted = f1_score(all_labels, all_preds, average='weighted')
     f1_macro = f1_score(all_labels, all_preds, average='macro')
@@ -110,19 +113,23 @@ def evaluate_model(embeddings_path: str):
     cm_path = Config.PLOTS_SAVE_DIR / "confusion_matrix_t5_lstm_cnn_2.png"
     plt.savefig(cm_path, dpi=150)
     print(f"\nConfusion matrix saved to: {cm_path}")
-    plt.show()
 
     return {
-        'f1_weighted': f1_weighted,
-        'f1_macro': f1_macro,
-        'mcc': mcc,
-        'token_acc': token_acc,
-        'seq_acc': seq_acc,
-        'avg_loss': avg_loss,
-        'precision': precision,
-        'recall': recall,
+        'classification_report': class_report,
+        'f1_weighted': f"{f1_weighted:.3f}",
+        'f1_macro': f"{f1_macro:.3f}",
+        'mcc': f"{mcc:.3f}",
+        'token_acc': f"{token_acc:.3f}",
+        'seq_acc': f"{seq_acc:.3f}",
+        'avg_loss': f"{avg_loss:.3f}",
+        'precision': f"{precision:.3f}",
+        'recall': f"{recall:.3f}",
     }
 
 
 if __name__ == "__main__":
-    evaluate_model(Config.TEST_EMBEDINGS)
+    res = evaluate_model(Config.TEST_EMBEDINGS)
+    with open(Config.METRICS_SAVE_PATH, "w") as f:
+        for key, value in res.items():
+            f.write(f"{key}: {value}\n")
+

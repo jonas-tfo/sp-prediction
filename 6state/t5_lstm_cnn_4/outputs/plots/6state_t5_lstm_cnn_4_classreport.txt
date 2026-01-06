@@ -1,0 +1,21 @@
+:               precision    recall  f1-score   support
+
+           S       0.91      0.93      0.92     10072
+           T       0.99      0.88      0.93      1388
+           L       0.98      0.93      0.95      2692
+           I       0.97      0.98      0.98    181014
+           M       0.81      0.89      0.85     10067
+           O       0.91      0.84      0.88     33607
+
+    accuracy                           0.95    238840
+   macro avg       0.93      0.91      0.92    238840
+weighted avg       0.95      0.95      0.95    238840
+
+f1_weighted: 0.954
+f1_macro: 0.917
+mcc: 0.886
+token_acc: 0.954
+seq_acc: 0.853
+avg_loss: 6.172
+precision: 0.955
+recall: 0.954
