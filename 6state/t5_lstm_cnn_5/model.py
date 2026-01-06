@@ -28,8 +28,8 @@ class SPCNNClassifier(nn.Module):
             bidirectional=True,
             batch_first=True, # refers to the shape of input and output tensors
         )
-        self.conv7 = nn.Conv1d(
 
+        self.conv7 = nn.Conv1d(
             in_channels=embedding_dim,
             out_channels=512,
             kernel_size=7,
