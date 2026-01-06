@@ -8,7 +8,9 @@ from pathlib import Path
 # setup variables
 # "Rostlab/prot_t5_xl_half_uniref50-enc" (~1.2B params)
 # "Rostlab/prot_t5_base_mt_uniref50" (~220M params)
-MODEL_NAME: str = "Rostlab/prot_t5_xl_half_uniref50-enc"
+# MODEL_NAME: str = "Rostlab/prot_t5_xl_half_uniref50-enc"
+MODEL_NAME: str = "Rostlab/ProstT5"
+MODEL_NAME_SHORT: str = MODEL_NAME.split("/")[1]
 NUM_FOLDS: int = 3
 
 DEVICE: str = (
@@ -25,7 +27,7 @@ BASE_DIR = Path.cwd()
 DATA_PATH = BASE_DIR / "data" / "aufgabe3"
 DATA_PATH_FOLDS: Path = DATA_PATH / "3-fold"
 TEST_CSV = DATA_PATH / "reduced_30_signalP6_test.csv"
-TEST_EMBEDINGS = DATA_PATH / "reduced_30_signalP6_test_embeddings.npz"
+TEST_EMBEDINGS = DATA_PATH / MODEL_NAME_SHORT / f"reduced_30_signalP6_test_embeddings_{MODEL_NAME_SHORT}.npz"
 
 print(f"Project base directory set to: {BASE_DIR}")
 print(f"Data path set to: {DATA_PATH}")
