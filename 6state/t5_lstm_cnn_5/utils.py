@@ -14,10 +14,10 @@ def ensure_dirs():
 
 def get_fold_paths(fold_num: int) -> dict:
     return {
-        "train_csv": Config.DATA_PATH_FOLDS / f"fold_{fold_num}_train.csv",
-        "val_csv": Config.DATA_PATH_FOLDS / f"fold_{fold_num}_val.csv",
-        "train_emb": Config.DATA_PATH_FOLDS_EMBEDDINGS / f"fold_{fold_num}_train_embeddings.npz",
-        "val_emb": Config.DATA_PATH_FOLDS_EMBEDDINGS / f"fold_{fold_num}_val_embeddings.npz",
+        "train_csv": Config.DATA_PATH_FOLDS / f"fold_{fold_num}_train{Config.DATA_PATH_EXTENSION}.csv",
+        "val_csv": Config.DATA_PATH_FOLDS / f"fold_{fold_num}_val{Config.DATA_PATH_EXTENSION}.csv",
+        "train_emb": Config.DATA_PATH_FOLDS_EMBEDDINGS / f"fold_{fold_num}_train_embeddings{Config.DATA_PATH_EXTENSION}.npz",
+        "val_emb": Config.DATA_PATH_FOLDS_EMBEDDINGS / f"fold_{fold_num}_val_embeddings{Config.DATA_PATH_EXTENSION}.npz",
     }
 
 def prepare_fold_data(fold_num: int, batch_size: int = Config.BATCH_SIZE) -> tuple[DataLoader, DataLoader]:

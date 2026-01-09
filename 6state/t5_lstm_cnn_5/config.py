@@ -9,6 +9,7 @@ class Config:
     MODEL_NAME_SHORT = MODEL_NAME.split("/")[1]
     EMBEDDING_DIM = 1024
     NUM_CLASSES = 6
+    DATA_PATH_EXTENSION = "_oversampled"
 
     # Training
     BATCH_SIZE = 32
@@ -34,9 +35,9 @@ class Config:
     BASE_DIR = Path(__file__).resolve().parent.parent.parent
     DATA_PATH = BASE_DIR / "data" / "aufgabe3"
     DATA_PATH_FOLDS = DATA_PATH / f"{NUM_FOLDS}-fold"
-    DATA_PATH_FOLDS_EMBEDDINGS = DATA_PATH / f"{NUM_FOLDS}-fold" / MODEL_NAME_SHORT 
-    TEST_CSV = DATA_PATH / "reduced_30_signalP6_test.csv"
-    TEST_EMBEDINGS = DATA_PATH / "embeddings" / MODEL_NAME_SHORT / f"reduced_30_signalP6_test_embeddings_{MODEL_NAME_SHORT}.npz"
+    DATA_PATH_FOLDS_EMBEDDINGS = DATA_PATH / f"{NUM_FOLDS}-fold" / MODEL_NAME_SHORT
+    TEST_CSV = DATA_PATH / f"reduced_30_signalP6_test{DATA_PATH_EXTENSION}.csv"
+    TEST_EMBEDINGS = DATA_PATH / "embeddings" / MODEL_NAME_SHORT / f"reduced_30_signalP6_test_embeddings_{MODEL_NAME_SHORT}{DATA_PATH_EXTENSION}.npz"
 
 
     # Output paths (for saving results)
