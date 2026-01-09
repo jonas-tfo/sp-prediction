@@ -15,7 +15,15 @@ from .model import SPCNNClassifier
 from .utils import get_validation_labels, prepare_fold_data, ensure_dirs
 
 
-def train():
+def train(lr=None, dropout=None, weight_decay=None):
+
+    if lr is not None:
+        Config.LR = lr
+    if dropout is not None:
+        Config.DROPOUT = dropout
+    if weight_decay is not None:
+        Config.WEIGHT_DECAY = weight_decay
+
     ensure_dirs()
 
     print(f"Using device: {Config.DEVICE}")
@@ -51,7 +59,11 @@ def train():
         # initialise the classifier (new for each fold)
         model = SPCNNClassifier(
             embedding_dim=Config.EMBEDDING_DIM,
-            num_labels=Config.NUM_CLASSES
+            num_labels=Config.NUM_CLASSES,
+            dropout=Config.DROPOUT,
+            lstm_hidden=Config.LSTM_HIDDEN,
+            lstm_layers=Config.LSTM_LAYERS,
+            conv_filters=Config.CONV_FILTERS,
         ).to(Config.DEVICE)
 
         # enables mixed precision training (fp16) should be bit faster
@@ -72,15 +84,11 @@ def train():
         patience_counter = 0
 
 
-        # Create optimizer
-        optimizer = torch.optim.AdamW([
-            {"params": model.conv5.parameters(), "lr": Config.LR},
-            {"params": model.conv7.parameters(), "lr": Config.LR},
-            {"params": model.conv9.parameters(), "lr": Config.LR},
-            {"params": model.classifier.parameters(), "lr": Config.LR},
-            {"params": model.lstm.parameters(), "lr": Config.LR},
-            {"params": model.crf.parameters(), "lr": Config.LR},
-        ])
+        optimizer = torch.optim.AdamW(
+            model.parameters(),
+            lr=Config.LR,
+            weight_decay=Config.WEIGHT_DECAY,
+        )
 
         # inner training loop for this fold (epochs for this fold)
         for epoch in range(Config.EPOCHS):
@@ -289,7 +297,7 @@ def train():
 
     print(f"\nTraining results saved to: {Config.TRAIN_VAL_LOSSES_PKL_SAVE_PATH}")
 
-    return fold_results
+    return avg_mcc
 
 
 if __name__ == "__main__":

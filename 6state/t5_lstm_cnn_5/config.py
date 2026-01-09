@@ -17,6 +17,13 @@ class Config:
     LR = 0.001
     NUM_FOLDS = 3
     PATIENCE = 7
+    EMBEDDING_DIM: int = 1024
+    NUM_LABELS: int = 6
+    DROPOUT: float = 0.35
+    WEIGHT_DECAY: float = 0.01
+    LSTM_HIDDEN: int = 512
+    LSTM_LAYERS: int = 2
+    CONV_FILTERS: int = 512
 
     # Device
     DEVICE = (
