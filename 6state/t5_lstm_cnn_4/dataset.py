@@ -42,7 +42,7 @@ class SPDatasetWithEmbeddings(Dataset):
             token_labels.append(-100)
         token_labels = token_labels[:seq_len]
 
-        # Attention mask (all 1s for actual sequence)
+        # Attention mask (all 1s for actual sequence), doesnt include the added EOS token
         attention_mask = torch.ones(seq_len, dtype=torch.long)
 
         return {

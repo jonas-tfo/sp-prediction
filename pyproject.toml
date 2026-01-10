@@ -37,6 +37,7 @@ dependencies = [
     "nest-asyncio>=1.6.0",
     "networkx>=3.6.1",
     "numpy>=2.4.0",
+    "optuna>=4.6.0",
     "packaging>=25.0",
     "pandas>=2.3.3",
     "parso>=0.8.5",

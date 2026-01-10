@@ -4,47 +4,57 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torchcrf import CRF
 
+from .config import Config
 
 class SPCNNClassifier(nn.Module):
 
-    def __init__(self, embedding_dim: int = 1024, num_labels: int = 6):
+    def __init__(
+          self,
+          embedding_dim: int = Config.EMBEDDING_DIM,
+          num_labels: int = Config.NUM_LABELS,
+          dropout: float = Config.DROPOUT,
+          lstm_hidden: int = Config.LSTM_HIDDEN,
+          lstm_layers: int = Config.LSTM_LAYERS,
+          conv_filters: int = Config.CONV_FILTERS,
+        ):
 
         super().__init__()
-        self.dropout = nn.Dropout(0.35)
+        self.dropout = nn.Dropout(dropout)
 
         self.conv9 = nn.Conv1d(
             in_channels=embedding_dim,
-            out_channels=512,
+            out_channels=conv_filters,
             kernel_size=9,
             padding=4,
         )
 
-        self.bn_conv1 = nn.BatchNorm1d(512)
+        self.bn_conv1 = nn.BatchNorm1d(conv_filters)
 
         self.lstm = nn.LSTM(
             input_size=512,
-            hidden_size=512,
-            num_layers=2,
+            hidden_size=lstm_hidden,
+            num_layers=lstm_layers,
             bidirectional=True,
             batch_first=True, # refers to the shape of input and output tensors
         )
 
         self.conv7 = nn.Conv1d(
             in_channels=embedding_dim,
-            out_channels=512,
+            out_channels=conv_filters,
             kernel_size=7,
             padding=3,
         )
         self.conv5 = nn.Conv1d(
             in_channels=embedding_dim,
-            out_channels=512,
+            out_channels=conv_filters,
             kernel_size=5,
             padding=2,
         )
 
-        self.bn_conv2 = nn.BatchNorm1d(512 * 2)
+        # Batch norm after concatenation of two conv layers
+        self.bn_conv2 = nn.BatchNorm1d(conv_filters * 2)
 
-        self.classifier = nn.Linear(512 * 2, num_labels)
+        self.classifier = nn.Linear(conv_filters * 2, num_labels)
         self.crf = CRF(num_labels, batch_first=True)
 
     def forward(self, embeddings: torch.Tensor, attention_mask: torch.Tensor, labels: torch.Tensor = None):
