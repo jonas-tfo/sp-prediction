@@ -21,7 +21,7 @@ from .model import SPCNNClassifier
 from .utils import get_test_data
 
 
-def evaluate_model(embeddings_path: str)
+def evaluate_model(embeddings_path):
 
     print(f"Loading model from {Config.MODEL_SAVE_PATH}")
     print(f"Using device: {Config.DEVICE}")

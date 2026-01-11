@@ -9,9 +9,10 @@ from pathlib import Path
 # "Rostlab/prot_t5_xl_half_uniref50-enc" (~1.2B params)
 # "Rostlab/prot_t5_base_mt_uniref50" (~220M params)
 # MODEL_NAME: str = "Rostlab/prot_t5_xl_half_uniref50-enc"
-MODEL_NAME: str = "Rostlab/ProstT5"
+MODEL_NAME: str = "Rostlab/prot_t5_xl_half_uniref50-enc"
 MODEL_NAME_SHORT: str = MODEL_NAME.split("/")[1]
 NUM_FOLDS: int = 3
+DATA_PATH_EXTENSION: str = ""
 
 DEVICE: str = (
     "mps"
@@ -26,8 +27,8 @@ BASE_DIR = Path.cwd()
 
 DATA_PATH = BASE_DIR / "data" / "aufgabe3"
 DATA_PATH_FOLDS: Path = DATA_PATH / "3-fold"
-TEST_CSV = DATA_PATH / "reduced_30_signalP6_test.csv"
-TEST_EMBEDINGS = DATA_PATH / MODEL_NAME_SHORT / f"reduced_30_signalP6_test_embeddings_{MODEL_NAME_SHORT}.npz"
+TEST_CSV = DATA_PATH / f"reduced_30_signalP6_test{DATA_PATH_EXTENSION}.csv"
+TEST_EMBEDINGS = DATA_PATH / MODEL_NAME_SHORT / f"reduced_30_signalP6_test_embeddings_{MODEL_NAME_SHORT}{DATA_PATH_EXTENSION}.npz"
 
 print(f"Project base directory set to: {BASE_DIR}")
 print(f"Data path set to: {DATA_PATH}")
@@ -70,8 +71,8 @@ def embed_train_val_data():
     # Generate and save embeddings for each fold's train/val sets
     for fold_idx in range(NUM_FOLDS):
         # load data for according fold
-        fold_train = pd.read_csv(DATA_PATH_FOLDS / f"fold_{fold_idx + 1}_train.csv")
-        fold_val = pd.read_csv(DATA_PATH_FOLDS / f"fold_{fold_idx + 1}_val.csv")
+        fold_train = pd.read_csv(DATA_PATH_FOLDS / f"fold_{fold_idx + 1}_train{DATA_PATH_EXTENSION}.csv")
+        fold_val = pd.read_csv(DATA_PATH_FOLDS / f"fold_{fold_idx + 1}_val{DATA_PATH_EXTENSION}.csv")
 
         # go through train and val data
         for df, split in [(fold_train, "train"), (fold_val, "val")]:
@@ -88,7 +89,7 @@ def embed_train_val_data():
                     print(f"  Processed {len(embeddings_dict)}/{len(df)} sequences")
 
             # save embeddings to npz file
-            save_path = DATA_PATH_FOLDS / f"fold_{fold_idx + 1}_{split}_embeddings.npz"
+            save_path = DATA_PATH_FOLDS / MODEL_NAME_SHORT / f"fold_{fold_idx + 1}_{split}_embeddings{DATA_PATH_EXTENSION}.npz"
             np.savez(save_path, **embeddings_dict) # each key value pair passed seperately, key as array identifier, value as contents in npz
             print(f"  Saved {len(embeddings_dict)} embeddings to {save_path.name}")
 

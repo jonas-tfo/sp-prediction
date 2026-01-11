@@ -16,4 +16,9 @@
 
 ## t5_lstm_cnn_4
 
--
+- changed the order of cnn layers to be more like signalp 5.0
+
+## t5_lstm_cnn_5
+
+- trained on oversampled dataset to attempt to fix class imbalance issue
+- did not work, performance decreased slightly
