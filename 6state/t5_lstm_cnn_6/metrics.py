@@ -5,12 +5,6 @@ from sklearn.metrics import accuracy_score, f1_score, matthews_corrcoef, precisi
 
 def sequence_level_accuracy(preds_flat: List[int], labels_flat: List[int], label_seqs: List[List[int]]) -> float:
 
-    per_seq_acc = sequence_level_accuracy_per_seq(preds_flat, labels_flat, label_seqs)
-    return sum(per_seq_acc) / len(per_seq_acc) if per_seq_acc else 0.0
-
-
-def sequence_level_accuracy_per_seq(preds_flat: List[int], labels_flat: List[int], label_seqs: List[List[int]]) -> List[int]:
-    """Returns a list of 0/1 values indicating if each sequence was predicted correctly."""
     # Reconstruct sequences from flat predictions
     seq_lengths = [len(seq) for seq in label_seqs]
     preds_seq = []
@@ -22,39 +16,16 @@ def sequence_level_accuracy_per_seq(preds_flat: List[int], labels_flat: List[int
         idx += length
 
     # Check if valid predictions match labels
-    per_seq_correct = []
+    correct = 0
     for pred, label in zip(preds_seq, labels_seq):
         is_valid = [lbl != -100 for lbl in label]
         valid_preds = [p for p, valid in zip(pred, is_valid) if valid]
         valid_labels = [lbl for lbl, valid in zip(label, is_valid) if valid]
-        per_seq_correct.append(1 if valid_preds == valid_labels else 0)
+        if valid_preds == valid_labels:
+            correct += 1
 
-    return per_seq_correct
-
-
-def mcc_per_sequence(preds_flat: List[int], labels_flat: List[int], label_seqs: List[List[int]]) -> List[float]:
-    """Compute MCC for each sequence individually."""
-    seq_lengths = [len(seq) for seq in label_seqs]
-    preds_seq = []
-    labels_seq = []
-    idx = 0
-    for length in seq_lengths:
-        preds_seq.append(preds_flat[idx : idx + length])
-        labels_seq.append(labels_flat[idx : idx + length])
-        idx += length
-
-    mcc_values = []
-    for pred, label in zip(preds_seq, labels_seq):
-        is_valid = [lbl != -100 for lbl in label]
-        valid_preds = [p for p, valid in zip(pred, is_valid) if valid]
-        valid_labels = [lbl for lbl, valid in zip(label, is_valid) if valid]
-        if len(set(valid_labels)) > 1 and len(valid_preds) > 1:
-            mcc_values.append(matthews_corrcoef(valid_labels, valid_preds))
-        else:
-            # MCC undefined for single class, use 1.0 if all correct, 0.0 otherwise
-            mcc_values.append(1.0 if valid_preds == valid_labels else 0.0)
-
-    return mcc_values
+    total = len(seq_lengths)
+    return correct / total if total > 0 else 0.0
 
 
 # TODO actually use this in the training, currently being done within train file

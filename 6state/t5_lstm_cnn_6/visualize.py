@@ -16,25 +16,37 @@ def plot_training_metrics(results_path: Path  = Config.TRAIN_VAL_LOSSES_PKL_SAVE
 
     num_folds = fold_results['num_folds']
 
-    # Plot validation metrics across folds (MCC and Sequence Accuracy only)
-    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+    # Plot validation metrics across folds
+    fig, axes = plt.subplots(2, 3, figsize=(15, 10))
 
     # Colors for each fold
     colors = plt.cm.tab10(np.linspace(0, 1, num_folds))
 
-    # Plot 1: MCC
-    ax = axes[0]
-    for i, mccs in enumerate(fold_results['val_mcc']):
-        epochs_range = range(1, len(mccs) + 1)
-        ax.plot(epochs_range, mccs, color=colors[i], marker='^', markersize=3, label=f'Fold {i+1}')
+    # Plot 1: Training and Validation Loss
+    ax = axes[0, 0]
+    for i, (train_loss, val_loss) in enumerate(zip(fold_results['train_losses'], fold_results['val_losses'])):
+        epochs_range = range(1, len(train_loss) + 1)
+        ax.plot(epochs_range, train_loss, linestyle='--', color=colors[i], alpha=0.5, label=f'Fold {i+1} Train')
+        ax.plot(epochs_range, val_loss, linestyle='-', color=colors[i], label=f'Fold {i+1} Val')
     ax.set_xlabel('Epoch')
-    ax.set_ylabel('MCC')
-    ax.set_title('Validation Matthews Correlation Coefficient')
+    ax.set_ylabel('Loss')
+    ax.set_title('Training & Validation Loss')
+    ax.legend(fontsize=7, ncol=2)
+    ax.grid(True, alpha=0.3)
+
+    # Plot 2: Token-level Accuracy
+    ax = axes[0, 1]
+    for i, token_accs in enumerate(fold_results['val_token_acc']):
+        epochs_range = range(1, len(token_accs) + 1)
+        ax.plot(epochs_range, token_accs, color=colors[i], marker='o', markersize=3, label=f'Fold {i+1}')
+    ax.set_xlabel('Epoch')
+    ax.set_ylabel('Token Accuracy')
+    ax.set_title('Validation Token-level Accuracy')
     ax.legend(fontsize=8)
     ax.grid(True, alpha=0.3)
 
-    # Plot 2: Sequence-level Accuracy
-    ax = axes[1]
+    # Plot 3: Sequence-level Accuracy
+    ax = axes[0, 2]
     for i, seq_accs in enumerate(fold_results['val_seq_acc']):
         epochs_range = range(1, len(seq_accs) + 1)
         ax.plot(epochs_range, seq_accs, color=colors[i], marker='s', markersize=3, label=f'Fold {i+1}')
@@ -44,10 +56,43 @@ def plot_training_metrics(results_path: Path  = Config.TRAIN_VAL_LOSSES_PKL_SAVE
     ax.legend(fontsize=8)
     ax.grid(True, alpha=0.3)
 
+    # Plot 4: MCC
+    ax = axes[1, 0]
+    for i, mccs in enumerate(fold_results['val_mcc']):
+        epochs_range = range(1, len(mccs) + 1)
+        ax.plot(epochs_range, mccs, color=colors[i], marker='^', markersize=3, label=f'Fold {i+1}')
+    ax.set_xlabel('Epoch')
+    ax.set_ylabel('MCC')
+    ax.set_title('Validation Matthews Correlation Coefficient')
+    ax.legend(fontsize=8)
+    ax.grid(True, alpha=0.3)
+
+    # Plot 5: Precision
+    ax = axes[1, 1]
+    for i, precs in enumerate(fold_results['val_precision']):
+        epochs_range = range(1, len(precs) + 1)
+        ax.plot(epochs_range, precs, color=colors[i], marker='d', markersize=3, label=f'Fold {i+1}')
+    ax.set_xlabel('Epoch')
+    ax.set_ylabel('Precision')
+    ax.set_title('Validation Precision (weighted)')
+    ax.legend(fontsize=8)
+    ax.grid(True, alpha=0.3)
+
+    # Plot 6: Recall
+    ax = axes[1, 2]
+    for i, recs in enumerate(fold_results['val_recall']):
+        epochs_range = range(1, len(recs) + 1)
+        ax.plot(epochs_range, recs, color=colors[i], marker='v', markersize=3, label=f'Fold {i+1}')
+    ax.set_xlabel('Epoch')
+    ax.set_ylabel('Recall')
+    ax.set_title('Validation Recall (weighted)')
+    ax.legend(fontsize=8)
+    ax.grid(True, alpha=0.3)
+
     plt.suptitle('K-Fold Cross Validation Metrics (T5 LSTM-CNN)', fontsize=14, fontweight='bold')
     plt.tight_layout()
 
-    plot_path = Config.PLOTS_SAVE_DIR / '6state_t5_lstm_cnn_4_metrics_plot.png'
+    plot_path = Config.PLOTS_SAVE_DIR / '6state_t5_lstm_cnn_5_metrics_plot.png'
     plt.savefig(plot_path, dpi=150)
     print(f"Metrics plot saved to: {plot_path}")
 
@@ -64,36 +109,35 @@ def plot_best_metrics_bar(results_path: Path = Config.TRAIN_VAL_LOSSES_PKL_SAVE_
 
     fig, ax = plt.subplots(figsize=(10, 6))
 
-    # metrics_names = ['Token Acc', 'Seq Acc', 'MCC', 'Precision', 'Recall']
-    metrics_names = ['Seq Acc', 'MCC']
+    metrics_names = ['Token Acc', 'Seq Acc', 'MCC', 'Precision', 'Recall']
     x = np.arange(len(metrics_names))
     width = 0.5
 
     all_values = {
-        # 'token_acc': [m['token_acc'] for m in all_fold_metrics],
+        'token_acc': [m['token_acc'] for m in all_fold_metrics],
         'seq_acc': [m['seq_acc'] for m in all_fold_metrics],
         'mcc': [m['mcc'] for m in all_fold_metrics],
-        # 'precision': [m['precision'] for m in all_fold_metrics],
-        # 'recall': [m['recall'] for m in all_fold_metrics]
+        'precision': [m['precision'] for m in all_fold_metrics],
+        'recall': [m['recall'] for m in all_fold_metrics]
     }
 
     # Calculate mean values
     mean_values = [
-        # np.mean(all_values['token_acc']),
+        np.mean(all_values['token_acc']),
         np.mean(all_values['seq_acc']),
         np.mean(all_values['mcc']),
-        # np.mean(all_values['precision']),
-        # np.mean(all_values['recall'])
+        np.mean(all_values['precision']),
+        np.mean(all_values['recall'])
     ]
 
     # Calculate standard deviation for error bars
     if len(all_fold_metrics) > 1:
         std_values = [
-            # np.std(all_values['token_acc']),
+            np.std(all_values['token_acc']),
             np.std(all_values['seq_acc']),
             np.std(all_values['mcc']),
-            # np.std(all_values['precision']),
-            # np.std(all_values['recall'])
+            np.std(all_values['precision']),
+            np.std(all_values['recall'])
         ]
     else:
         std_values = [0] * len(mean_values)
@@ -129,7 +173,7 @@ def plot_best_metrics_bar(results_path: Path = Config.TRAIN_VAL_LOSSES_PKL_SAVE_
 
     plt.tight_layout()
 
-    bar_path = Config.PLOTS_SAVE_DIR / '6state_t5_lstm_cnn_4_best_metrics_bar.png'
+    bar_path = Config.PLOTS_SAVE_DIR / '6state_t5_lstm_cnn_5_best_metrics_bar.png'
     plt.savefig(bar_path, dpi=150)
     print(f"Bar plot saved to: {bar_path}")
 
@@ -204,7 +248,7 @@ def draw_model_architecture():
     plt.xlim(0, 7)
     plt.tight_layout()
 
-    arch_path = Config.PLOTS_SAVE_DIR / 'model_architecture_6state_t5_lstm_cnn_4.png'
+    arch_path = Config.PLOTS_SAVE_DIR / 'model_architecture_6state_t5_lstm_cnn_5.png'
     plt.savefig(arch_path, dpi=150)
     print(f"Architecture diagram saved to: {arch_path}")
 
