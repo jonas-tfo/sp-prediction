@@ -1,5 +1,6 @@
 
 import pandas as pd
+import torch
 from torch.utils.data import DataLoader
 
 from .config import Config
@@ -71,3 +72,13 @@ def get_test_data() -> tuple[list, list, pd.DataFrame]:
     test_label_seqs = test_df_encoded["label"].tolist()
 
     return test_seqs, test_label_seqs, test_df_encoded
+
+# Compute class weights using inverse frequency weighting
+def inverse_freq_weights(dist, label_map):
+    weights = torch.zeros(len(label_map))
+    for label, idx in label_map.items():
+        weights[idx] = 1.0 / dist[label]
+    # Normalize so weights sum to num_classes
+    weights = weights / weights.sum() * len(label_map)
+    print("Class weights:", weights)
+    return weights

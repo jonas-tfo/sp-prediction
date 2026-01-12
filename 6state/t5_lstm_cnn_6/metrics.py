@@ -27,6 +27,36 @@ def sequence_level_accuracy(preds_flat: List[int], labels_flat: List[int], label
     total = len(seq_lengths)
     return correct / total if total > 0 else 0.0
 
+def sequence_level_accuracy_only_sps(preds_flat: List[int], labels_flat: List[int], label_seqs: List[List[int]]) -> float:
+
+    # Reconstruct sequences from flat predictions
+    seq_lengths = [len(seq) for seq in label_seqs]
+    preds_seq = []
+    labels_seq = []
+    idx = 0
+    for length in seq_lengths:
+        preds_seq.append(preds_flat[idx : idx + length])
+        labels_seq.append(labels_flat[idx : idx + length])
+        idx += length
+
+    # Check if valid predictions match labels, only for sequences with signal peptides
+    correct = 0
+    total_sp_sequences = 0
+    for pred, label in zip(preds_seq, labels_seq):
+        is_valid = [lbl != -100 for lbl in label]
+        valid_labels = [lbl for lbl, valid in zip(label, is_valid) if valid]
+
+        # Only consider sequences that have SP labels (0=n-region, 1=h-region, 2=c-region)
+        has_sp = any(lbl in (0, 1, 2) for lbl in valid_labels)
+        if not has_sp:
+            continue
+
+        total_sp_sequences += 1
+        valid_preds = [p for p, valid in zip(pred, is_valid) if valid]
+        if valid_preds == valid_labels:
+            correct += 1
+
+    return correct / total_sp_sequences if total_sp_sequences > 0 else 0.0
 
 # TODO actually use this in the training, currently being done within train file
 def compute_metrics(all_preds: List[int], all_labels: List[int], label_seqs: List[List[int]] = None) -> dict:
@@ -50,5 +80,6 @@ def compute_metrics(all_preds: List[int], all_labels: List[int], label_seqs: Lis
 
     if label_seqs is not None:
         metrics["seq_acc"] = sequence_level_accuracy(all_preds, all_labels, label_seqs)
+        metrics["seq_acc_only_sps"] = sequence_level_accuracy_only_sps(all_preds, all_labels, label_seqs)
 
     return metrics

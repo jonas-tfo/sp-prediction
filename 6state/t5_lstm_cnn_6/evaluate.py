@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 
 from .config import Config
 from .dataset import SPDatasetWithEmbeddings
-from .metrics import sequence_level_accuracy
+from .metrics import sequence_level_accuracy, sequence_level_accuracy_only_sps
 from .model import SPCNNClassifier
 from .utils import get_test_data
 
@@ -90,6 +90,7 @@ def evaluate_model(embeddings_path):
     mcc = matthews_corrcoef(all_labels, all_preds)
     token_acc = accuracy_score(all_labels, all_preds)
     seq_acc = sequence_level_accuracy(all_preds, all_labels, test_label_seqs)
+    seq_acc_only_sps = sequence_level_accuracy_only_sps(all_preds, all_labels, test_label_seqs)
     avg_loss = test_loss / len(test_loader)
 
     print(f"\nMetrics Summary:")
@@ -98,6 +99,7 @@ def evaluate_model(embeddings_path):
     print(f"Matthews Correlation Coefficient (MCC): {mcc:.4f}")
     print(f"Token-level Accuracy: {token_acc:.4f}")
     print(f"Sequence Level Accuracy: {seq_acc:.4f}")
+    print(f"Sequence Level Accuracy (only SPs): {seq_acc_only_sps:.4f}")
     print(f"Average test loss: {avg_loss:.4f}")
     print(f"Precision: {precision:.4f}")
     print(f"Recall: {recall:.4f}")
@@ -122,6 +124,7 @@ def evaluate_model(embeddings_path):
         'mcc': mcc,
         'token_acc': token_acc,
         'seq_acc': seq_acc,
+        'seq_acc_only_sps': seq_acc_only_sps,
         'avg_loss': avg_loss,
         'precision': precision,
         'recall': recall,
@@ -129,4 +132,9 @@ def evaluate_model(embeddings_path):
 
 
 if __name__ == "__main__":
-    evaluate_model(Config.TEST_EMBEDINGS)
+    res = evaluate_model(Config.TEST_EMBEDINGS)
+    metrics_path = Config.PLOTS_SAVE_DIR / "evaluation_metrics_t5_lstm_cnn_6.txt"
+    with open(metrics_path, "w") as f:
+        for key, value in res.items():
+            f.write(f"{key}: {value}\n")
+

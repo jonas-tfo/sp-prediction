@@ -11,7 +11,7 @@ from pathlib import Path
 # MODEL_NAME: str = "Rostlab/prot_t5_xl_half_uniref50-enc"
 MODEL_NAME: str = "Rostlab/prot_t5_xl_half_uniref50-enc"
 MODEL_NAME_SHORT: str = MODEL_NAME.split("/")[1]
-NUM_FOLDS: int = 3
+NUM_FOLDS: int = 1
 DATA_PATH_EXTENSION: str = ""
 
 DEVICE: str = (
@@ -26,11 +26,13 @@ print(f"Using device: {DEVICE}")
 BASE_DIR = Path.cwd()
 
 DATA_PATH = BASE_DIR / "data" / "aufgabe3"
-DATA_PATH_FOLDS: Path = DATA_PATH / "3-fold"
+DATA_PATH_FOLDS: Path = DATA_PATH / f"{NUM_FOLDS}-fold"
 TEST_CSV = DATA_PATH / f"reduced_30_signalP6_test{DATA_PATH_EXTENSION}.csv"
 TEST_EMBEDINGS = DATA_PATH / MODEL_NAME_SHORT / f"reduced_30_signalP6_test_embeddings_{MODEL_NAME_SHORT}{DATA_PATH_EXTENSION}.npz"
 
 print(f"Project base directory set to: {BASE_DIR}")
+print(f"Data directory set to: {DATA_PATH}")
+print(f"Folds data path set to: {DATA_PATH_FOLDS}")
 print(f"Data path set to: {DATA_PATH}")
 print(f"Using model: {MODEL_NAME}")
 
@@ -120,7 +122,7 @@ def embed_test_data():
     print(f"  Saved {len(embeddings_dict)} embeddings to {save_path.name}")
 
 if __name__ == "__main__":
-    embed_test_data()
+    embed_train_val_data()
 
 
 

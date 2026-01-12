@@ -1,4 +1,5 @@
 
+from tqdm import utils
 import torch
 from pathlib import Path
 
@@ -14,16 +15,32 @@ class Config:
     # Training
     BATCH_SIZE = 32
     EPOCHS = 20
-    LR = 0.001
-    NUM_FOLDS = 3
+    LR = 0.0006647135865318024
+    NUM_FOLDS = 5
     PATIENCE = 7
     EMBEDDING_DIM: int = 1024
     NUM_LABELS: int = 6
-    DROPOUT: float = 0.35
-    WEIGHT_DECAY: float = 0.01
+    DROPOUT: float = 0.12602063719411183
+    WEIGHT_DECAY: float = 0.00032476735706274504
     LSTM_HIDDEN: int = 512
     LSTM_LAYERS: int = 2
-    CONV_FILTERS: int = 512
+    CONV_FILTERS: int = 256
+
+    # Label mapping
+    LABEL_MAP = {'S': 0, 'T': 1, 'L': 2, 'I': 3, 'M': 4, 'O': 5}
+    LABEL_MAP_INV = {v: k for k, v in LABEL_MAP.items()}
+
+    # Weighting for combined loss
+    CE_WEIGHT: float = 0.2
+    LABEL_DIST = {
+        'S': 0.05,
+        'T': 0.02,
+        'L': 0.03,
+        'I': 0.65,
+        'M': 0.05,
+        'O': 0.20,
+    }
+    CLASS_WEIGHTS: torch.Tensor = None
 
     # Device
     DEVICE = (
@@ -55,7 +72,3 @@ class Config:
     MODEL_DIR = OUTPUT_DIR / "models"
     MODEL_SAVE_PATH = MODEL_DIR / "6state_t5_lstm_cnn_6.pt"
     MODEL_SAVE_PATH_TEMP = str(MODEL_DIR / "6state_t5_lstm_cnn_5_fold{}.pt")
-
-    # Label mapping
-    LABEL_MAP = {'S': 0, 'T': 1, 'L': 2, 'I': 3, 'M': 4, 'O': 5}
-    LABEL_MAP_INV = {v: k for k, v in LABEL_MAP.items()}

@@ -10,7 +10,7 @@ from tqdm import tqdm
 from sklearn.metrics import accuracy_score, matthews_corrcoef, precision_score, recall_score
 
 from .config import Config
-from .metrics import sequence_level_accuracy
+from .metrics import sequence_level_accuracy, sequence_level_accuracy_only_sps
 from .model import SPCNNClassifier
 from .utils import get_validation_labels, prepare_fold_data, ensure_dirs
 
@@ -37,6 +37,7 @@ def train(lr=None, dropout=None, weight_decay=None):
         'fold_numbers': [],
         'val_token_acc': [],
         'val_seq_acc': [],
+        'val_seq_accs_only_sps': [],
         'val_mcc': [],
         'val_precision': [],
         'val_recall': [],
@@ -74,6 +75,7 @@ def train(lr=None, dropout=None, weight_decay=None):
         val_losses = []
         val_token_accs = []
         val_seq_accs = []
+        val_seq_accs_only_sps = []
         val_mccs = []
         val_precisions = []
         val_recalls = []
@@ -160,21 +162,23 @@ def train(lr=None, dropout=None, weight_decay=None):
             if len(all_val_preds) > 0:
                 token_acc = accuracy_score(all_val_labels, all_val_preds)
                 seq_acc = sequence_level_accuracy(all_val_preds, all_val_labels, val_label_seqs)
+                seq_acc_only_sps = sequence_level_accuracy_only_sps(all_val_preds, all_val_labels, val_label_seqs)
                 mcc = matthews_corrcoef(all_val_labels, all_val_preds)
                 precision = precision_score(all_val_labels, all_val_preds, average='weighted', zero_division="warn")
                 recall = recall_score(all_val_labels, all_val_preds, average='weighted', zero_division="warn")
             else:
-                token_acc = seq_acc = mcc = precision = recall = 0.0
+                token_acc = seq_acc = seq_acc_only_sps = mcc = precision = recall = 0.0
 
             val_token_accs.append(token_acc)
             val_seq_accs.append(seq_acc)
+            val_seq_accs_only_sps.append(seq_acc_only_sps)
             val_mccs.append(mcc)
             val_precisions.append(precision)
             val_recalls.append(recall)
 
             print(f"Fold {fold} - Epoch {epoch+1}/{Config.EPOCHS}")
             print(f"  Loss: Train={avg_train_loss:.4f}, Val={avg_val_loss:.4f}")
-            print(f"  Metrics: TokenAcc={token_acc:.4f}, SeqAcc={seq_acc:.4f}, MCC={mcc:.4f}, Prec={precision:.4f}, Rec={recall:.4f}")
+            print(f"  Metrics: TokenAcc={token_acc:.4f}, SeqAcc={seq_acc:.4f}, SeqAcc(OnlySPs)={seq_acc_only_sps:.4f}, MCC={mcc:.4f}, Prec={precision:.4f}, Rec={recall:.4f}")
 
             # Save best model for fold based on MCC TODO maybe alter that a bit
             if mcc > best_mcc:
@@ -186,13 +190,14 @@ def train(lr=None, dropout=None, weight_decay=None):
                     'val_loss': avg_val_loss,
                     'token_acc': token_acc,
                     'seq_acc': seq_acc,
+                    'seq_acc_only_sps': seq_acc_only_sps,
                     'mcc': mcc,
                     'precision': precision,
                     'recall': recall
                 }
                 model_path_temp = Config.MODEL_SAVE_PATH_TEMP.format(fold)
                 torch.save(model.state_dict(), model_path_temp)
-                print(f"  → Best model for fold {fold} saved to {model_path_temp} (MCC={mcc:.4f})")
+                print(f"-> Best model for fold {fold} saved to {model_path_temp} (MCC={mcc:.4f})")
             else:
                 patience_counter += 1
                 if patience_counter >= Config.PATIENCE:
@@ -206,6 +211,7 @@ def train(lr=None, dropout=None, weight_decay=None):
         fold_results['fold_numbers'].append(fold)
         fold_results['val_token_acc'].append(val_token_accs)
         fold_results['val_seq_acc'].append(val_seq_accs)
+        fold_results['val_seq_accs_only_sps'].append(val_seq_accs_only_sps)
         fold_results['val_mcc'].append(val_mccs)
         fold_results['val_precision'].append(val_precisions)
         fold_results['val_recall'].append(val_recalls)
@@ -215,6 +221,7 @@ def train(lr=None, dropout=None, weight_decay=None):
         print(f"  Val Loss: {best_metrics['val_loss']:.4f}")
         print(f"  Token Acc: {best_metrics['token_acc']:.4f}")
         print(f"  Seq Acc: {best_metrics['seq_acc']:.4f}")
+        print(f"  Seq Acc (only SPs): {best_metrics['seq_acc_only_sps']:.4f}")
         print(f"  MCC: {best_metrics['mcc']:.4f}")
         print(f"  Precision: {best_metrics['precision']:.4f}")
         print(f"  Recall: {best_metrics['recall']:.4f}")
@@ -225,11 +232,12 @@ def train(lr=None, dropout=None, weight_decay=None):
 
     print("\nSummary of all folds:")
     for i, (best_loss, best_m) in enumerate(zip(fold_results['best_val_losses'], fold_results['best_metrics']), 1):
-        print(f"Fold {i}: Loss={best_loss:.4f}, TokenAcc={best_m['token_acc']:.4f}, SeqAcc={best_m['seq_acc']:.4f}, MCC={best_m['mcc']:.4f}")
+        print(f"Fold {i}: Loss={best_loss:.4f}, TokenAcc={best_m['token_acc']:.4f}, SeqAcc={best_m['seq_acc']:.4f}, SeqAcc(OnlySPs)={best_m['seq_acc_only_sps']:.4f}, MCC={best_m['mcc']:.4f}")
 
     avg_best_val_loss = sum(fold_results['best_val_losses']) / Config.NUM_FOLDS
     avg_token_acc = sum(m['token_acc'] for m in fold_results['best_metrics']) / Config.NUM_FOLDS
     avg_seq_acc = sum(m['seq_acc'] for m in fold_results['best_metrics']) / Config.NUM_FOLDS
+    avg_seq_acc_only_sps = sum(m['seq_acc_only_sps'] for m in fold_results['best_metrics']) / Config.NUM_FOLDS
     avg_mcc = sum(m['mcc'] for m in fold_results['best_metrics']) / Config.NUM_FOLDS
     avg_precision = sum(m['precision'] for m in fold_results['best_metrics']) / Config.NUM_FOLDS
     avg_recall = sum(m['recall'] for m in fold_results['best_metrics']) / Config.NUM_FOLDS
@@ -238,6 +246,7 @@ def train(lr=None, dropout=None, weight_decay=None):
     print(f"  Val Loss: {avg_best_val_loss:.4f}")
     print(f"  Token Acc: {avg_token_acc:.4f}")
     print(f"  Seq Acc: {avg_seq_acc:.4f}")
+    print(f"  Seq Acc (only SPs): {avg_seq_acc_only_sps:.4f}")
     print(f"  MCC: {avg_mcc:.4f}")
     print(f"  Precision: {avg_precision:.4f}")
     print(f"  Recall: {avg_recall:.4f}")
@@ -274,6 +283,7 @@ def train(lr=None, dropout=None, weight_decay=None):
         'best_val_losses': fold_results['best_val_losses'],
         'val_token_acc': fold_results['val_token_acc'],
         'val_seq_acc': fold_results['val_seq_acc'],
+        'val_seq_accs_only_sps': fold_results['val_seq_accs_only_sps'],
         'val_mcc': fold_results['val_mcc'],
         'val_precision': fold_results['val_precision'],
         'val_recall': fold_results['val_recall'],
@@ -284,6 +294,7 @@ def train(lr=None, dropout=None, weight_decay=None):
         'avg_best_val_loss': avg_best_val_loss,
         'avg_token_acc': avg_token_acc,
         'avg_seq_acc': avg_seq_acc,
+        'avg_seq_acc_only_sps': avg_seq_acc_only_sps,
         'avg_mcc': avg_mcc,
         'avg_precision': avg_precision,
         'avg_recall': avg_recall,
