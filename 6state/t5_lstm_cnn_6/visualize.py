@@ -55,7 +55,7 @@ def plot_training_metrics(results_path: Path  = Config.TRAIN_VAL_LOSSES_PKL_SAVE
     ax.legend(fontsize=8)
     ax.grid(True, alpha=0.3)
 
-    plt.suptitle('K-Fold Cross Validation Metrics (T5 LSTM-CNN)', fontsize=14, fontweight='bold')
+    plt.suptitle('K-Fold Cross Validation Metrics (T5 LSTM-CNN)', fontsize=18, fontweight='bold')
     plt.tight_layout()
 
     plot_path = Config.PLOTS_SAVE_DIR / '6state_t5_lstm_cnn_6_metrics_plot.png'
@@ -64,8 +64,8 @@ def plot_training_metrics(results_path: Path  = Config.TRAIN_VAL_LOSSES_PKL_SAVE
 
     return fig
 
-
 def plot_best_metrics_bar(results_path: Path = Config.TRAIN_VAL_LOSSES_PKL_SAVE_PATH):
+
 
     with open(results_path, 'rb') as f:
         fold_results = pickle.load(f)
@@ -119,17 +119,18 @@ def plot_best_metrics_bar(results_path: Path = Config.TRAIN_VAL_LOSSES_PKL_SAVE_
     for y_tick in yticks:
         ax.axhline(y=y_tick, color='lightgray', linewidth=0.8, zorder=3)
 
-    ax.set_ylabel('Score')
+    ax.set_ylabel('Score', fontsize=16)
     ax.set_title(f'Mean Validation Metrics Across {num_folds} Folds (Error bars: ± std)')
     ax.set_xticks(x)
-    ax.set_xticklabels(metrics_names)
+    ax.set_xticklabels(metrics_names, fontsize=16)
     ax.set_ylim(0, 1.05)
     ax.set_yticks(yticks)
+    ax.tick_params(axis='y', labelsize=16)
 
     # Value labels with mean ± std
     max_yerr = max(std_values) if max(std_values) > 0 else 0.02
     for i, (val, std) in enumerate(zip(mean_values, std_values)):
-        ax.text(i, val + max_yerr + 0.02, f'{val:.3f} ± {std:.3f}', ha='center', va='bottom', fontsize=9)
+        ax.text(i, val + max_yerr + 0.02, f'{val:.3f} ± {std:.3f}', ha='center', va='bottom', fontsize=16)
 
     plt.tight_layout()
 
@@ -142,68 +143,68 @@ def plot_best_metrics_bar(results_path: Path = Config.TRAIN_VAL_LOSSES_PKL_SAVE_
 
 def draw_model_architecture():
     """Draw a vertical diagram of the model architecture based on SPCNNClassifier in model.py."""
-    fig, ax = plt.subplots(figsize=(18, 22))
+    fig, ax = plt.subplots(figsize=(14, 18))
     ax.axis('off')
 
-    box_width = 4.0
-    box_height = 1.0
-    font_size = 18
+    box_width = 5.0
+    box_height = 1.4
+    font_size = 22
 
     # Center x position for shared layers
     center_x = 7.0
 
     # Top row: Input Embeddings and Attention Mask side by side
     top_blocks = [
-        ("Input Embeddings\n(Pre-computed T5, dim=1024)", 4.0, 19.0),
-        ("Attention Mask", 10.0, 19.0),
+        ("T5 Embeddings", 3.5, 16.0),
+        ("Attention Mask", 10.5, 16.0),
     ]
 
     # Main architecture blocks before split
     pre_split_blocks = [
-        ("Conv1D (conv5)\n(1024 → 256, kernel=5, pad=2)", center_x, 17.0),
-        ("BatchNorm1D + GELU", center_x, 15.5),
-        ("BiLSTM\n(2 layers, 256 → 512×2)", center_x, 14.0),
+        ("Conv1D (k=5)", center_x, 13.5),
+        ("BatchNorm + GELU", center_x, 11.0),
+        ("BiLSTM", center_x, 8.5),
     ]
 
     # Parallel conv branches
     parallel_blocks = [
-        ("Conv1D (conv7)\n(1024 → 256, k=7, p=3)", 4.0, 12.0),
-        ("Conv1D (conv9)\n(1024 → 256, k=9, p=4)", 10.0, 12.0),
+        ("Conv1D (k=7)", 3.5, 6.0),
+        ("Conv1D (k=9)", 10.5, 6.0),
     ]
 
     # Concat block
-    concat_block = ("Concatenate\n(256 + 256 = 512)", center_x, 10.0)
+    concat_block = ("Concatenate", center_x, 3.5)
 
     # Post-concat blocks (up to classifier)
     post_concat_blocks = [
-        ("BatchNorm1D + GELU", center_x, 8.5),
-        ("Dropout (p=0.126)", center_x, 7.0),
-        ("Classifier\n(Linear: 512 → 6 logits)", center_x, 5.5),
+        ("BatchNorm + GELU", center_x, 1.0),
+        ("Dropout", center_x, -1.5),
+        ("Classifier", center_x, -4.0),
     ]
 
     # Inference path (LEFT side)
     inference_x = 3.0
     inference_blocks = [
-        ("CRF Decode\n(Viterbi)", inference_x, 3.0),
-        ("Per Token\nPredictions", inference_x, 1.3),
+        ("CRF Decode", inference_x, -7.0),
+        ("Predictions", inference_x, -9.5),
     ]
 
     # Training path (RIGHT side)
     training_x = 11.0
     loss_blocks = [
-        ("CRF Loss\n(neg. log-likelihood)", 8.5, 3.0),
-        ("Weighted CE Loss\n(class-balanced)", 13.5, 3.0),
+        ("CRF Loss", 8.5, -7.0),
+        ("CE Loss", 14.5, -7.0),
     ]
-    combined_loss_block = ("Combined Loss\n(0.8 × CRF + 0.2 × CE)", training_x, 1.3)
+    combined_loss_block = ("Combined Loss", training_x, -9.5)
 
     def draw_block(label, x, y, width=box_width, height=box_height, facecolor='white', fontsize=font_size):
         rect = mpatches.FancyBboxPatch(
             (x - width/2, y), width, height,
-            boxstyle="round,pad=0.03",
-            edgecolor='black', facecolor=facecolor, linewidth=2
+            boxstyle="round,pad=0.05",
+            edgecolor='black', facecolor=facecolor, linewidth=2.5
         )
         ax.add_patch(rect)
-        ax.text(x, y + height / 2, label, ha='center', va='center', fontsize=fontsize)
+        ax.text(x, y + height / 2, label, ha='center', va='center', fontsize=fontsize, fontweight='bold')
 
     # Draw top blocks
     for label, x, y in top_blocks:
@@ -301,12 +302,12 @@ def draw_model_architecture():
                                     connectionstyle='arc3,rad=0', linewidth=2))
 
     # Add labels below the paths
-    ax.text(inference_x, 0.3, "Inference", fontsize=16, fontweight='bold', color='steelblue', ha='center')
-    ax.text(training_x, 0.3, "Training", fontsize=16, fontweight='bold', color='firebrick', ha='center')
+    ax.text(inference_x, -11.5, "Inference", fontsize=30, fontweight='bold', color='steelblue', ha='center')
+    ax.text(training_x, -11.5, "Training", fontsize=30, fontweight='bold', color='firebrick', ha='center')
 
-    plt.title("SPCNNClassifier Architecture (T5 LSTM-CNN 6)", fontsize=20, fontweight='bold')
-    plt.ylim(-0.3, 20.5)
-    plt.xlim(-0.5, 16.5)
+    plt.title("Model Architecture", fontsize=26, fontweight='bold', pad=20)
+    plt.ylim(-12.5, 18.5)
+    plt.xlim(-1.0, 18.0)
     plt.tight_layout()
 
     arch_path = Config.PLOTS_SAVE_DIR / 'model_architecture_6state_t5_lstm_cnn_6.png'
