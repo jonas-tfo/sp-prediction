@@ -20,6 +20,17 @@ from .metrics import sequence_level_accuracy, sequence_level_accuracy_only_sps
 from .model import SPCNNClassifier
 from .utils import get_test_data
 
+def position_specific_mcc(pred_sequences, true_sequences):
+    mccs = []
+
+    for i in range(70):
+        true_flat = [seq[i] for seq in true_sequences]
+        pred_flat = [seq[i] for seq in pred_sequences]
+
+        mccs.append(matthews_corrcoef(true_flat, pred_flat))
+
+    return mccs
+
 
 def evaluate_model(embeddings_path):
 
@@ -55,6 +66,9 @@ def evaluate_model(embeddings_path):
     test_loss = 0
     all_preds = []
     all_labels = []
+    # For position-specific MCC - collect full sequences
+    all_pred_sequences = []
+    all_label_sequences = []
 
     with torch.no_grad():
         for batch in test_loader:
@@ -71,10 +85,18 @@ def evaluate_model(embeddings_path):
 
             # Collect valid tokens (skip -100 labels)
             for pred_seq, label_seq, mask in zip(predictions, labels, attention_mask):
+                seq_preds = []
+                seq_labels = []
                 for pred, true, is_valid in zip(pred_seq, label_seq, mask):
                     if true.item() != -100 and is_valid.item() == 1:
                         all_preds.append(pred)
                         all_labels.append(true.item())
+                        seq_preds.append(pred)
+                        seq_labels.append(true.item())
+                # Store full sequences for position-specific MCC
+                if len(seq_preds) == 70:  # Only complete sequences
+                    all_pred_sequences.append(seq_preds)
+                    all_label_sequences.append(seq_labels)
 
     # Calculate metrics
     print("\n" + "="*60)
@@ -104,6 +126,14 @@ def evaluate_model(embeddings_path):
     print(f"Precision: {precision:.4f}")
     print(f"Recall: {recall:.4f}")
 
+    # Position-specific MCC
+    pos_mccs = position_specific_mcc(all_pred_sequences, all_label_sequences)
+    print(f"\nPosition-specific MCC ({len(all_pred_sequences)} sequences):")
+    print(f"  Mean: {np.mean(pos_mccs):.4f}")
+    print(f"  Std: {np.std(pos_mccs):.4f}")
+    print(f"  Min: {np.min(pos_mccs):.4f} (position {np.argmin(pos_mccs)})")
+    print(f"  Max: {np.max(pos_mccs):.4f} (position {np.argmax(pos_mccs)})")
+
     # Confusion Matrix
     cm = confusion_matrix(all_labels, all_preds, labels=list(Config.LABEL_MAP.values()))
     cm_relative = cm.astype("float") / cm.sum(axis=1, keepdims=True)
@@ -118,6 +148,8 @@ def evaluate_model(embeddings_path):
     print(f"\nConfusion matrix saved to: {cm_path}")
     plt.show()
 
+    print(f"Position-specific MCCs: {pos_mccs}")
+
     return {
         'f1_weighted': f1_weighted,
         'f1_macro': f1_macro,
@@ -128,6 +160,7 @@ def evaluate_model(embeddings_path):
         'avg_loss': avg_loss,
         'precision': precision,
         'recall': recall,
+        'position_specific_mcc': pos_mccs,
     }
 
 
