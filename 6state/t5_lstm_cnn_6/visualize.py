@@ -75,7 +75,7 @@ def plot_best_metrics_bar(results_path: Path = Config.TRAIN_VAL_LOSSES_PKL_SAVE_
 
     fig, ax = plt.subplots(figsize=(10, 6))
 
-    metrics_names = ['MCC', 'Seq Acc', 'Seq Acc (SP only)']
+    metrics_names = ['MCC', 'Seq. Level Hits', 'Seq. Level Hits \n (SP only)']
     x = np.arange(len(metrics_names))
     width = 0.5
 
@@ -120,7 +120,7 @@ def plot_best_metrics_bar(results_path: Path = Config.TRAIN_VAL_LOSSES_PKL_SAVE_
         ax.axhline(y=y_tick, color='lightgray', linewidth=0.8, zorder=3)
 
     ax.set_ylabel('Score', fontsize=16)
-    ax.set_title(f'Mean Validation Metrics Across {num_folds} Folds (Error bars: ± std)')
+    ax.set_title(f'Mean Validation Metrics Across {num_folds} Folds (Error bars: ± std)', fontdict={'fontsize': 18, 'fontweight': 'bold'})
     ax.set_xticks(x)
     ax.set_xticklabels(metrics_names, fontsize=16)
     ax.set_ylim(0, 1.05)
