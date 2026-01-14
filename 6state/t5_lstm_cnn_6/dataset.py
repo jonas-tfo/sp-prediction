@@ -23,6 +23,12 @@ class SPDatasetWithEmbeddings(Dataset):
 
         # load embeddings keyed by uniprot_id
         self.embeddings = np.load(embeddings_path)
+        
+        # Filter dataframe to only include IDs present in embeddings
+        valid_ids = set(self.embeddings.files)
+        original_count = len(self.df)
+        self.df = self.df[self.df["uniprot_id"].isin(valid_ids)]
+        print(f"Dataset filtered: {len(self.df)}/{original_count} entries kept based on available embeddings.")
 
     def __len__(self) -> int:
         return len(self.df)
