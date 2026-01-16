@@ -1,45 +1,116 @@
-# Signal Peptide Prediction
+# SandwichSP
 
-This project focuses on **Signal Peptide Prediction** using various deep learning architectures and protein sequence encoding methods. The goal is to accurately identify and classify signal peptides in protein sequences, exploring both binary (2-state) and multi-class (6-state) classification tasks.
+Signal peptide prediction using deep learning. SandwichSP uses a CNN-LSTM-CRF architecture with ProtT5 embeddings to predict signal peptides and their cleavage sites in protein sequences.
 
-### t5_lstm_cnn_2
+## Installation
 
-- **Architecture**: Simple hybrid model.
-- Only one CNN layer for simplicity.
-- LSTM layer follows the CNN layer.
-- Uses T5 tokenizer, encoder, and embeddings.
+```bash
+pip install git+https://github.com/jonas-tfo/sp-prediction.git#subdirectory=sandwichsp
+```
 
-### t5_lstm_cnn_3
+## Quick Start
 
-- **Changes**: Enhanced feature extraction.
-- Added two more CNN layers after the first CNN layer; these are concatenated on the channel dimension.
-- LSTM layer processes the output of the three CNN layers (number of LSTM layers reduced to 2).
-- Switched to **GELU** activation function to attempt better non-linearity with transformers (compared to ReLU).
-- Moved dropout to be before the final classifier.
-- Increased patience for early stopping.
-- _Result_: Only very barely improved performance.
+```python
+from sandwichsp import SandwichSP
 
-### t5_lstm_cnn_4
+# Initialize (downloads model weights on first use)
+model = SandwichSP()
 
-- **Changes**: Architectural reordering.
-- Changed the order of CNN layers to more closely resemble the **SignalP 5.0** architecture.
+# Predict signal peptide
+result = model.predict("MEGAALLRVSVLCIWMSALFLGVGVRAEEAGARVQQNVPSGTDTGDPQSKPLGDWAAGTMDPESSIFIED")
 
-### t5_lstm_cnn_5
+print(f"SP Type: {result.sp_type}")
+print(f"Cleavage Site: {result.cleavage_site}")
+print(f"Labels: {result.labels}")
+```
 
-- **Changes**: Data sampling and optimization.
-- Trained on an **oversampled dataset** to attempt to fix class imbalance issues.
-- Added **weight decay** to the optimizer.
-- _Result_: Did not work as expected; performance decreased slightly.
+Output:
 
-### t5_lstm_cnn_6
+```
+SP Type: SP
+Cleavage Site: 27
+Labels: SSSSSSSSSSSSSSSSSSSSSSSSSSSOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
 
-- **Changes**: Dual loss function and structured prediction.
-- **Combined Loss**: Uses a weighted sum of Cross-Entropy Loss and CRF Loss.
-- **Architecture**:
-    - Input Embeddings (T5) -> Conv1d (kernel 5) -> GELU -> LSTM (Bidirectional)
-    - LSTM Output -> Parallel Conv1d (kernel 7) and Conv1d (kernel 9)
-    - Concatenation -> BatchNorm -> GELU -> Dropout -> Linear Classifier
-    - CRF and Cross-Entropy Loss for training.
-    - CRF Decoding for inference.
-- Aims to improve the structural coherence of the predicted signal peptide regions.
+```
 
+## Batch Prediction
+
+```python
+sequences = [
+    "MKFLILLFNILCLFPVLAADNHGVPKRSRARASGASQRLLKL",
+    "MKTAYIAKQRQISFVKSHFSRQLEERLGLIEVQAPILSRVGD",
+]
+
+results = model.predict_batch(sequences)
+
+for result in results:
+    print(f"{result.sp_type}: cleavage at {result.cleavage_site}")
+```
+
+## Label Meanings
+
+| Label | Description                           |
+| ----- | ------------------------------------- |
+| S     | Sec/SPI signal peptide                |
+| T     | Tat/SPI signal peptide                |
+| L     | Sec/SPII signal peptide (lipoprotein) |
+| I     | Cytoplasm (no signal peptide)         |
+| M     | Transmembrane region                  |
+| O     | Other/extracellular                   |
+
+## SP Types
+
+| Type  | Description                        |
+| ----- | ---------------------------------- |
+| SP    | Sec signal peptide (most common)   |
+| TAT   | Tat signal peptide (twin-arginine) |
+| LIPO  | Lipoprotein signal peptide         |
+| NO_SP | No signal peptide detected         |
+
+## API Reference
+
+### `SandwichSP`
+
+```python
+SandwichSP(device="auto", weights_path=None)
+```
+
+**Parameters:**
+
+- `device`: Device to use (`"cuda"`, `"mps"`, `"cpu"`, or `"auto"`)
+- `weights_path`: Path to model weights (downloads automatically if None)
+
+**Methods:**
+
+- `predict(sequence: str) -> PredictionResult`: Predict for a single sequence
+- `predict_batch(sequences: list[str]) -> list[PredictionResult]`: Batch prediction
+
+### `PredictionResult`
+
+**Attributes:**
+
+- `sequence`: Input amino acid sequence
+- `labels`: Per-residue label string
+- `sp_type`: Signal peptide type (`"SP"`, `"TAT"`, `"LIPO"`, `"NO_SP"`)
+- `cleavage_site`: Cleavage position (0-indexed) or None
+
+## Requirements
+
+- Python >= 3.9
+- PyTorch >= 1.13.0
+- Transformers >= 4.30.0
+- pytorch-crf >= 0.7.2
+
+## Model Architecture
+
+SandwichSP uses a CNN-LSTM-CRF architecture:
+
+1. **Input**: ProtT5-XL-Half embeddings (1024 dimensions)
+2. **Conv1D** (kernel=5) with BatchNorm and GELU
+3. **Bidirectional LSTM** (2 layers, 512 hidden units)
+4. **Parallel Conv1D branches** (kernels 7 and 9)
+5. **CRF layer** for sequence-level decoding
+
+## License
+
+MIT License
