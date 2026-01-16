@@ -92,6 +92,9 @@ def plot_best_metrics_bar(results_path: Path = Config.TRAIN_VAL_LOSSES_PKL_SAVE_
         np.mean(all_values['seq_acc_only_sps']),
     ]
 
+    for i, val in enumerate(mean_values):
+        mean_values[i] = float(f"{round(val, 2):.2f}")
+
     # Calculate standard deviation for error bars
     if len(all_fold_metrics) > 1:
         std_values = [
@@ -120,7 +123,7 @@ def plot_best_metrics_bar(results_path: Path = Config.TRAIN_VAL_LOSSES_PKL_SAVE_
         ax.axhline(y=y_tick, color='lightgray', linewidth=0.8, zorder=3)
 
     ax.set_ylabel('Score', fontsize=16)
-    ax.set_title(f'Mean Validation Metrics Across {num_folds} Folds (Error bars: ± std)', fontdict={'fontsize': 18, 'fontweight': 'bold'})
+    ax.set_title(f'Validation Metrics Across {num_folds} Folds (Mean: ± std)', fontdict={'fontsize': 18, 'fontweight': 'bold'})
     ax.set_xticks(x)
     ax.set_xticklabels(metrics_names, fontsize=16)
     ax.set_ylim(0, 1.05)
@@ -130,7 +133,7 @@ def plot_best_metrics_bar(results_path: Path = Config.TRAIN_VAL_LOSSES_PKL_SAVE_
     # Value labels with mean ± std
     max_yerr = max(std_values) if max(std_values) > 0 else 0.02
     for i, (val, std) in enumerate(zip(mean_values, std_values)):
-        ax.text(i, val + max_yerr + 0.02, f'{val:.3f} ± {std:.3f}', ha='center', va='bottom', fontsize=16)
+        ax.text(i, val + max_yerr + 0.02, f'{val:.2f} ± {round(std, 2):.2f}', ha='center', va='bottom', fontsize=16)
 
     plt.tight_layout()
 

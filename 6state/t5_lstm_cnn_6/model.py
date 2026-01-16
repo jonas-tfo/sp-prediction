@@ -59,7 +59,7 @@ class SPCNNClassifier(nn.Module):
         # Weighted cross-entropy loss in addition to CRF loss
         self.ce_loss = nn.CrossEntropyLoss(
             weight=class_weights,
-            ignore_index=-100,
+            ignore_index=-100, # for EOS token (and maybe PAD?)
             reduction="mean"
         )
 

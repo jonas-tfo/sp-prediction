@@ -33,7 +33,8 @@ SIX_TO_FOUR_MAP = {
     5: 3  # OTHER
 }
 
-PLOT_LABELS = ['SP', 'TAT', 'LIPO', 'OTHER']
+PLOT_LABELS_4STATE = ['SP', 'TAT', 'LIPO', 'OTHER']
+PLOT_LABELS_6STATE = ['SP', 'TAT', 'LIPO', 'NO_SP', 'NO_SP_B', 'OTHER']
 SEQ_LENGTH = 70
 
 
@@ -134,27 +135,32 @@ def plot_metrics(mean_mcc, std_mcc, mean_acc, std_acc, fold_num, output_path):
     plt.close()
 
 
-def plot_label_distribution(sequences, output_path, title="Label Distribution"):
+def plot_label_distribution(sequences, output_path, title="Label Distribution", num_states=4):
     """Plots the relative distribution of labels."""
-    counts = {i: np.zeros(SEQ_LENGTH) for i in range(4)}
+    counts = {i: np.zeros(SEQ_LENGTH) for i in range(num_states)}
     total_counts = np.zeros(SEQ_LENGTH)
-    
+
     for seq in sequences:
         for i in range(min(len(seq), SEQ_LENGTH)):
             label = seq[i]
             if label in counts:
                 counts[label][i] += 1
                 total_counts[i] += 1
-                
+
     total_counts[total_counts == 0] = 1
-    ratios = [counts[i] / total_counts for i in range(4)]
-    
-    colors = ['#D55E00', '#009E73', '#56B4E9', '#CCCCCC']
-    
+    ratios = [counts[i] / total_counts for i in range(num_states)]
+
+    if num_states == 4:
+        colors = ['#D55E00', '#009E73', '#56B4E9', '#CCCCCC']
+        plot_labels = PLOT_LABELS_4STATE
+    else:
+        colors = ['#D55E00', '#009E73', '#56B4E9', '#E69F00', '#0072B2', '#CCCCCC']
+        plot_labels = PLOT_LABELS_6STATE
+
     fig, ax = plt.subplots(figsize=(12, 6))
     x = np.arange(1, SEQ_LENGTH + 1)
-    
-    ax.stackplot(x, *ratios, labels=PLOT_LABELS, colors=colors, alpha=0.9)
+
+    ax.stackplot(x, *ratios, labels=plot_labels, colors=colors, alpha=0.9)
     
     ax.set_xlim(1, SEQ_LENGTH)
     ax.set_ylim(0, 1.0)
@@ -170,7 +176,7 @@ def plot_label_distribution(sequences, output_path, title="Label Distribution"):
     plt.close()
 
 
-def get_fold_predictions(fold_num, embeddings_path):
+def get_fold_predictions(fold_num, embeddings_path=Config.TEST_EMBEDINGS):
     """Run inference for a single fold and return raw sequences."""
     
     model_path = Config.MODEL_SAVE_PATH_TEMP.format(fold_num)
@@ -229,16 +235,26 @@ def get_fold_predictions(fold_num, embeddings_path):
     return fold_pred_seqs, fold_label_seqs
 
 
-def evaluate_best_fold(best_fold_num, embeddings_path=None):
-    """Evaluate ONLY the best fold and run bootstrap on it."""
-    
+def evaluate_best_fold(best_fold_num, embeddings_path=None, use_6state=False):
+    """Evaluate ONLY the best fold and run bootstrap on it.
+
+    Args:
+        best_fold_num: The fold number to evaluate.
+        embeddings_path: Path to the embeddings file.
+        use_6state: If True, evaluate with original 6 states. If False, map to 4 states.
+    """
+
     if embeddings_path is None:
-        embeddings_path = Config.TEST_EMBEDINGS_FILTERED
+        embeddings_path = Config.TEST_EMBEDINGS
+
+    num_states = 6 if use_6state else 4
+    state_suffix = "6state" if use_6state else "4state"
 
     print(f"Using device: {Config.DEVICE}")
     print(f"Test embeddings: {embeddings_path}")
     print(f"Evaluating BEST MODEL: Fold {best_fold_num}")
-    
+    print(f"Evaluation mode: {num_states}-state")
+
     # 1. Collect predictions ONLY for the best fold
     p_seqs, l_seqs = get_fold_predictions(best_fold_num, embeddings_path)
 
@@ -248,28 +264,33 @@ def evaluate_best_fold(best_fold_num, embeddings_path=None):
 
     print(f"\nTotal sequences collected: {len(p_seqs)}")
 
-    # 2. Map to 4-State System
-    print("Mapping 6-state predictions to 4-state...")
-    mapped_preds = map_sequences_to_4state(p_seqs)
-    mapped_labels = map_sequences_to_4state(l_seqs)
+    # 2. Optionally map to 4-State System
+    if use_6state:
+        print("Using original 6-state labels...")
+        eval_preds = p_seqs
+        eval_labels = l_seqs
+    else:
+        print("Mapping 6-state predictions to 4-state...")
+        eval_preds = map_sequences_to_4state(p_seqs)
+        eval_labels = map_sequences_to_4state(l_seqs)
 
     # 3. Plot Ground Truth Distribution
     Config.PLOTS_SAVE_DIR.mkdir(parents=True, exist_ok=True)
-    dist_plot_path = Config.PLOTS_SAVE_DIR / "ground_truth_distribution_4state.png"
-    plot_label_distribution(mapped_labels, dist_plot_path, title="Ground Truth Label Composition")
+    dist_plot_path = Config.PLOTS_SAVE_DIR / f"ground_truth_distribution_{state_suffix}.png"
+    plot_label_distribution(eval_labels, dist_plot_path, title="Ground Truth Label Composition", num_states=num_states)
 
     # 4. Bootstrap Analysis (on the single fold's predictions)
     mean_mcc, std_mcc, mean_acc, std_acc = calculate_bootstrap_stats(
-        mapped_preds, mapped_labels, n_iterations=1000, seq_length=SEQ_LENGTH
+        eval_preds, eval_labels, n_iterations=1000, seq_length=SEQ_LENGTH
     )
 
     # 5. Plot Metrics
-    metrics_plot_path = Config.PLOTS_SAVE_DIR / f"fold_{best_fold_num}_metrics_4state.png"
+    metrics_plot_path = Config.PLOTS_SAVE_DIR / f"fold_{best_fold_num}_metrics_{state_suffix}.png"
     plot_metrics(mean_mcc, std_mcc, mean_acc, std_acc, best_fold_num, metrics_plot_path)
 
     # 6. Save CSV
     positions = np.arange(1, SEQ_LENGTH + 1)
-    
+
     df = pd.DataFrame({
         'Position': positions,
         'Mean_MCC': mean_mcc,
@@ -278,8 +299,8 @@ def evaluate_best_fold(best_fold_num, embeddings_path=None):
         'Mean_Accuracy': mean_acc,
         'Std_Dev_acc': std_acc
     })
-    
-    csv_path = Config.PLOTS_SAVE_DIR / f"fold_{best_fold_num}_stats_4state.csv"
+
+    csv_path = Config.PLOTS_SAVE_DIR / f"fold_{best_fold_num}_stats_{state_suffix}.csv"
     df.to_csv(csv_path, index=False)
     print(f"\nDetailed statistics saved to: {csv_path}")
     print("\nSummary (First 5 positions):")
@@ -287,6 +308,12 @@ def evaluate_best_fold(best_fold_num, embeddings_path=None):
 
 
 if __name__ == "__main__":
-    BEST_FOLD = 5
-    
-    evaluate_best_fold(BEST_FOLD)
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Evaluate best fold with MCC metrics")
+    parser.add_argument("--fold", type=int, default=5, help="Fold number to evaluate (default: 5)")
+    parser.add_argument("--use-6state", action="store_true", help="Use original 6 states instead of mapping to 4 states")
+
+    args = parser.parse_args()
+
+    evaluate_best_fold(args.fold, use_6state=args.use_6state)

@@ -14,12 +14,86 @@ from sklearn.metrics import (
 from sklearn.utils import resample
 import matplotlib.pyplot as plt
 from tqdm import tqdm  # Optional: for progress bar during bootstrapping
+import pickle
+from pathlib import Path
+import pandas as pd
 
 from .config import Config
 from .dataset import SPDatasetWithEmbeddings
 from .metrics import sequence_level_accuracy, sequence_level_accuracy_only_sps
 from .model import SPCNNClassifier
 from .utils import get_test_data
+
+
+def plot_best_metrics_bar_evaluation(results_path: Path = Config.PLOTS_SAVE_DIR / "evaluation_metrics_final.csv"):
+    """Plot MCC, Seq. Accuracy, and Seq. Accuracy (SP only) as a bar chart."""
+
+    # Read the CSV file and parse metrics
+    metrics = {}
+    with open(results_path, "r") as f:
+        for line in f:
+            parts = line.strip().split(", ", 1)
+            if len(parts) == 2:
+                key, value = parts
+                try:
+                    metrics[key] = float(value)
+                except ValueError:
+                    pass  # Skip non-numeric values like position_specific_mcc list
+
+    # Extract values and std deviations
+    mcc = metrics.get('mcc', 0)
+    mcc_std = metrics.get('mcc_std', 0)
+    seq_acc = metrics.get('seq_acc', 0)
+    seq_acc_std = metrics.get('seq_acc_std', 0)
+    seq_acc_only_sps = metrics.get('seq_acc_only_sps', 0)
+    seq_acc_only_sps_std = metrics.get('seq_acc_only_sps_std', 0)
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    metrics_names = ['MCC', 'Seq. Level Hits', 'Seq. Level Hits \n (SP only)']
+    x = np.arange(len(metrics_names))
+    width = 0.5
+
+    mean_values = [mcc, seq_acc, seq_acc_only_sps]
+    std_values = [mcc_std, seq_acc_std, seq_acc_only_sps_std]
+
+    # Plot bars
+    ax.bar(x, mean_values, width, color='steelblue', edgecolor='none', zorder=2)
+    ax.errorbar(x, mean_values, yerr=std_values, fmt='none',
+                ecolor='black', capsize=5, capthick=1.5, elinewidth=1.5, zorder=4)
+
+    # Styling
+    ax.set_facecolor('white')
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_color('lightgray')
+    ax.spines['bottom'].set_color('lightgray')
+
+    # Horizontal lines
+    yticks = np.arange(0, 1.1, 0.2)
+    for y_tick in yticks:
+        ax.axhline(y=y_tick, color='lightgray', linewidth=0.8, zorder=3)
+
+    ax.set_ylabel('Score', fontsize=16)
+    ax.set_title('Evaluation Metrics (Mean ± Bootstrap Std)', fontdict={'fontsize': 18, 'fontweight': 'bold'})
+    ax.set_xticks(x)
+    ax.set_xticklabels(metrics_names, fontsize=16)
+    ax.set_ylim(0, 1.05)
+    ax.set_yticks(yticks)
+    ax.tick_params(axis='y', labelsize=16)
+
+    # Value labels with mean ± std
+    max_yerr = max(std_values) if max(std_values) > 0 else 0.02
+    for i, (val, std) in enumerate(zip(mean_values, std_values)):
+        ax.text(i, val + max_yerr + 0.02, f'{val:.2f} ± {round(std, 2):.2f}', ha='center', va='bottom', fontsize=16)
+
+    plt.tight_layout()
+
+    bar_path = Config.PLOTS_SAVE_DIR / '6state_t5_lstm_cnn_6_evaluation_metrics_bar.png'
+    plt.savefig(bar_path, dpi=150)
+    print(f"Bar plot saved to: {bar_path}")
+
+    return fig
 
 def position_specific_mcc(pred_sequences, true_sequences):
     """
@@ -172,9 +246,7 @@ def evaluate_model(embeddings_path):
     seq_acc_only_sps = sequence_level_accuracy_only_sps(all_preds, all_labels, full_label_sequences)
     avg_loss = test_loss / len(test_loader)
 
-    # ---------------------------------------------------------
     # Bootstrap Analysis for Std Dev
-    # ---------------------------------------------------------
     bootstrap_results = calculate_bootstrap_std(full_pred_sequences, full_label_sequences)
     mcc_std = bootstrap_results['mcc_std']
     seq_acc_std = bootstrap_results['seq_acc_std']
@@ -234,10 +306,11 @@ def evaluate_model(embeddings_path):
 
 if __name__ == "__main__":
     res = evaluate_model(Config.TEST_EMBEDINGS)
-    metrics_path = Config.PLOTS_SAVE_DIR / "evaluation_metrics_final.txt"
+    metrics_path = Config.PLOTS_SAVE_DIR / "evaluation_metrics_final.csv"
     with open(metrics_path, "w") as f:
         for key, value in res.items():
             if isinstance(value, list):
-                f.write(f"{key}: {value}\n")
+                f.write(f"{key}, {value}\n")
             else:
-                f.write(f"{key}: {value}\n")
+                f.write(f"{key}, {value}\n")
+    plot_best_metrics_bar_evaluation()

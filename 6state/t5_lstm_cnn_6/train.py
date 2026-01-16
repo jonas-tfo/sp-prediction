@@ -109,7 +109,7 @@ def train(lr=None, dropout=None, weight_decay=None):
                     token_labels = batch['labels'].to(Config.DEVICE)
 
                     optimizer.zero_grad() # clear the gradients from previous batch, will accumulate otherwise
-                    loss = model(embeddings, attention_mask, token_labels) # call forward func, crf gives loss directly during training
+                    loss = model(embeddings, attention_mask, token_labels) # call forward func, crf and ce give loss directly during training
 
                     scaler.scale(loss).backward() # backpropagation, scales gradients for fp16, i.e. prevents underflow to 0 using multiplier
                     scaler.unscale_(optimizer) # unscales gradients again to not use the inflated values
