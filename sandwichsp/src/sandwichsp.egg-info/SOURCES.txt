@@ -1,0 +1,14 @@
+README.md
+pyproject.toml
+src/sandwichsp/__init__.py
+src/sandwichsp/config.py
+src/sandwichsp/embeddings.py
+src/sandwichsp/model.py
+src/sandwichsp/predictor.py
+src/sandwichsp/py.typed
+src/sandwichsp/weights.py
+src/sandwichsp.egg-info/PKG-INFO
+src/sandwichsp.egg-info/SOURCES.txt
+src/sandwichsp.egg-info/dependency_links.txt
+src/sandwichsp.egg-info/requires.txt
+src/sandwichsp.egg-info/top_level.txt

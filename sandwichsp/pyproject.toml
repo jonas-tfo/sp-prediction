@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sandwichsp"
+version = "0.1.0"
+description = "Signal peptide prediction using deep learning"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.9"
+authors = [
+    {name = "Jonas"},
+]
+keywords = ["bioinformatics", "signal-peptide", "deep-learning", "protein"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
+dependencies = [
+    "torch>=1.13.0",
+    "pytorch-crf>=0.7.2",
+    "transformers>=4.30.0",
+    "numpy>=1.21.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/jonas-tfo/sp-prediction"
+Repository = "https://github.com/jonas-tfo/sp-prediction"
+Issues = "https://github.com/jonas-tfo/sp-prediction/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["sandwichsp*"]
+
+[tool.setuptools.package-data]
+sandwichsp = ["py.typed"]

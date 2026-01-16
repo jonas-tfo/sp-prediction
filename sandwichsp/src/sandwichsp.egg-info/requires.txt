@@ -1,0 +1,8 @@
+torch>=1.13.0
+pytorch-crf>=0.7.2
+transformers>=4.30.0
+numpy>=1.21.0
+
+[dev]
+pytest>=7.0.0
+pytest-cov>=4.0.0
