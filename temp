@@ -1,4 +1,0 @@
-i would like /Users/jonas/Desktop/Uni/PBL/sp-prediction.nosync/data/bar_plot_all_models.py to make one plot to compare multiple models. for simplicity sake, make it so that i can give a list of pkl files
-  (like the one in the t5_lstm_cnn_6 plots directory, and plot the metrics where i can see the different model performances at once. i only want the mcc, seq acc and seq acc (only sp seqs), see the previously
-  mentioned model for how to plot these. so the plot should be similar to that, but should display the data from all of the pkl files of all of the models
-
