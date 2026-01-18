@@ -1,4 +1,4 @@
-i would like /Users/jonas/Desktop/Uni/PBL/sp-prediction.nosync/data/bar_plot_all_models.py to make one plot to compare multiple models. for simplicity sake, make it so that i can give a list of pkl files
-  (like the one in the t5_lstm_cnn_6 plots directory, and plot the metrics where i can see the different model performances at once. i only want the mcc, seq acc and seq acc (only sp seqs), see the previously
-  mentioned model for how to plot these. so the plot should be similar to that, but should display the data from all of the pkl files of all of the models
+i would like some more plots to be generated. the evaluation results for another model are in /home/jonas/Downloads/PBLRost/PBLRost/aeneas_stats.csv and i would like to compare them to the results you just plotted. however, the
+  data from /home/jonas/Downloads/PBLRost/PBLRost/non_train_ids.txt should be excluded from the test set before testing. the embeddings for the filtered sequences are already in
+  /home/jonas/Documents/Projects/sp-prediction/data/aufgabe3/prot_t5_xl_half_uniref50-enc/reduced_30_signalP6_test_embeddings_prot_t5_xl_half_uniref50-enc_filtered.npz
 
