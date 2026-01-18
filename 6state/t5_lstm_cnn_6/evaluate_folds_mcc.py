@@ -300,7 +300,7 @@ def evaluate_best_fold(best_fold_num, embeddings_path=None, use_6state=False):
         'Std_Dev_acc': std_acc
     })
 
-    csv_path = Config.PLOTS_SAVE_DIR / f"fold_{best_fold_num}_stats_{state_suffix}.csv"
+    csv_path = Config.PLOTS_SAVE_DIR / f"fold_{best_fold_num}_stats_{state_suffix}_final.csv"
     df.to_csv(csv_path, index=False)
     print(f"\nDetailed statistics saved to: {csv_path}")
     print("\nSummary (First 5 positions):")
