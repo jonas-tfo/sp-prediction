@@ -60,7 +60,7 @@ class Config:
     DATA_PATH = BASE_DIR / "data" / "aufgabe3"
     DATA_PATH_FOLDS = DATA_PATH / f"{NUM_FOLDS}-fold"
     DATA_PATH_FOLDS_EMBEDDINGS = DATA_PATH / f"{NUM_FOLDS}-fold" / MODEL_NAME_SHORT
-    TEST_CSV = DATA_PATH / f"reduced_30_signalP6_test{DATA_PATH_EXTENSION}.csv"
+    TEST_CSV = DATA_PATH / f"reduced_30_signalP6_test_filtered_final{DATA_PATH_EXTENSION}.csv"
     TEST_EMBEDINGS = DATA_PATH / MODEL_NAME_SHORT / f"reduced_30_signalP6_test_embeddings_{MODEL_NAME_SHORT}{DATA_PATH_EXTENSION}.npz"
     TEST_EMBEDINGS_FILTERED = DATA_PATH / MODEL_NAME_SHORT / f"reduced_30_signalP6_test_embeddings_{MODEL_NAME_SHORT}{DATA_PATH_EXTENSION}_filtered.npz"
 
