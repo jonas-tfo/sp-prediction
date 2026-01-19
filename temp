@@ -1,4 +1,0 @@
-i would like some more plots to be generated. the evaluation results for another model are in /home/jonas/Downloads/PBLRost/PBLRost/aeneas_stats.csv and i would like to compare them to the results you just plotted. however, the
-  data from /home/jonas/Downloads/PBLRost/PBLRost/non_train_ids.txt should be excluded from the test set before testing. the embeddings for the filtered sequences are already in
-  /home/jonas/Documents/Projects/sp-prediction/data/aufgabe3/prot_t5_xl_half_uniref50-enc/reduced_30_signalP6_test_embeddings_prot_t5_xl_half_uniref50-enc_filtered.npz
-
