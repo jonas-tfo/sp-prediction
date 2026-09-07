@@ -2,12 +2,20 @@
 
 Signal peptide prediction using deep learning. SandwichSP uses a CNN-LSTM-CRF architecture with ProtT5 embeddings to predict signal peptides and their cleavage sites in protein sequences.
 
-For detailed information on the model, the methods used, and the results, see the paper ["Signal Peptide Prediction Using Machine Learning"](./signal_peptide_prediction_using_machine_learning.pdf)
+For detailed information on the model, the methods used, and the results, see the report ["Signal Peptide Prediction Using Machine Learning"](./signal_peptide_prediction_using_machine_learning.pdf)
 
 ## Installation
 
 ```bash
 pip install git+https://github.com/jonas-tfo/sp-prediction.git#subdirectory=sandwichsp
+```
+
+### Manual (requires uv)
+
+``` bash
+git clone git@github.com:jonas-tfo/sandwichsp.git
+cd sandwhichsp
+uv sync
 ```
 
 ## Quick Start
@@ -105,7 +113,7 @@ SandwichSP(device="auto", weights_path=None)
 
 ## Model Architecture
 
-SandwichSP uses a CNN-LSTM-CRF architecture:
+SandwichSP uses a CNN-LSTM-CRF architecture inspired by both the SignalP6 and SignalP5 models.
 
 1. **Input**: ProtT5-XL-Half embeddings (1024 dimensions)
 2. **Conv1D** (kernel=5) with BatchNorm and GELU
